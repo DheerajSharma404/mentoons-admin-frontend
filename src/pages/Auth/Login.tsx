@@ -10,9 +10,7 @@ const LogIn = () => {
           alt="mentoons-icon"
           className="w-32"
         />
-        <h1 className="poppins font-medium text-xl sm:text-4xl">
-          Emplyee Management
-        </h1>
+        <h1 className="poppins font-medium text-xl sm:text-4xl">Admin Login</h1>
         <Signin />
       </div>
     </section>
