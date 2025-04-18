@@ -1,13 +1,13 @@
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
-import { useState, useEffect, useCallback } from "react";
+import debounce from "lodash/debounce";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DynamicTable from "../../components/common/Table";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 import DeleteConfirmationModal from "../../components/common/DeleteConfirmationModal";
-import debounce from 'lodash/debounce';
-import Pagination from "../../components/common/Pagination";
 import Loader from "../../components/common/Loader";
+import Pagination from "../../components/common/Pagination";
+import DynamicTable from "../../components/common/Table";
 import { User } from "../../types";
 
 const Users = () => {
@@ -16,10 +16,10 @@ const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [sortOrder, setSortOrder] = useState('asc');
-  const [sortField, setSortField] = useState('createdAt');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [sortField, setSortField] = useState("createdAt");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -27,7 +27,7 @@ const Users = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const editUser = (row: any) => {
-    console.log("Edit user:", row);
+    navigate(`/user/edit/${row._id}`);
   };
 
   const removeUser = (row: any) => {
@@ -39,17 +39,22 @@ const Users = () => {
     if (userToDelete) {
       try {
         const token = await getToken();
-        await axios.delete(`${import.meta.env.VITE_BASE_URL}/user/user/${userToDelete.clerkId}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+        await axios.delete(
+          `https://mentoons-backend-zlx3.onrender.com/api/v1/user/user/${userToDelete.clerkId}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
           }
-        });
-        setUsers(prevUsers => prevUsers.filter(user => user._id !== userToDelete._id));
-        toast.success('User deleted successfully');
+        );
+        setUsers((prevUsers) =>
+          prevUsers.filter((user) => user._id !== userToDelete._id)
+        );
+        toast.success("User deleted successfully");
       } catch (error) {
-        console.error('Error deleting user:', error);
-        toast.error('Failed to delete user');
+        console.error("Error deleting user:", error);
+        toast.error("Failed to delete user");
       }
     }
     setIsDeleteModalOpen(false);
@@ -61,28 +66,28 @@ const Users = () => {
     console.log("View user:", row);
   };
 
-  const handleSort = (field: any) => {
+  const handleSort = (field: string) => {
     setSortField(field);
-    setSortOrder(prevOrder => prevOrder === 'asc' ? 'desc' : 'asc');
+    setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
   };
 
   const debouncedSearch = useCallback(
-    debounce((value) => {
+    debounce((value: string) => {
       setDebouncedSearchTerm(value);
     }, 500),
     []
   );
 
-  const handleSearch = (event: any) => {
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
     debouncedSearch(event.target.value);
   };
 
-  const handlePageChange = (newPage: any) => {
+  const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
 
-  const handleLimitChange = (newLimit: any) => {
+  const handleLimitChange = (newLimit: number) => {
     setLimit(newLimit);
     setCurrentPage(1);
   };
@@ -92,26 +97,33 @@ const Users = () => {
       setIsLoading(true);
       try {
         const token = await getToken();
-        const response = await axios.get("https://mentoons-backend-zlx3.onrender.com/api/v1/user/all-users", {
-          headers: { Authorization: `Bearer ${token}` },
-          params: {
-            limit,
-            page: currentPage,
-            sort: `${sortField}:${sortOrder}`,
-            search: debouncedSearchTerm
+        const response = await axios.get(
+          "https://mentoons-backend-zlx3.onrender.com/api/v1/user/all-users",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params: {
+              limit,
+              page: currentPage,
+              sort: `${sortField}:${sortOrder}`,
+              search: debouncedSearchTerm,
+            },
           }
-        });
+        );
+        console.log("API Response:", response.data);
 
         if (response.data.success && Array.isArray(response.data.data.users)) {
           setUsers(response.data.data.users);
           setTotalPages(response.data.data.totalPages || 1);
           setTotalUsers(response.data.data.totalCount || 0);
         } else {
-          console.error('Fetched data is not in the expected format:', response.data);
+          console.error(
+            "Fetched data is not in the expected format:",
+            response.data
+          );
           setUsers([]);
         }
       } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error("Error fetching users:", error);
         setUsers([]);
       } finally {
         setIsLoading(false);
@@ -126,13 +138,13 @@ const Users = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-6">Users</h1>
+      <h1 className="mb-6 text-2xl font-bold">Users</h1>
       {isLoading ? (
         <Loader />
       ) : (
         <>
           <DynamicTable
-            headings={['Name', 'Email', 'Phone Number', 'Role', 'Actions']}
+            headings={["Name", "Email", "Phone Number", "Role", "Actions"]}
             data={users}
             onEdit={editUser}
             onDelete={removeUser}
@@ -157,10 +169,10 @@ const Users = () => {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
-        itemName={userToDelete ? userToDelete.name || 'this user' : ''}
+        itemName={userToDelete ? userToDelete.name || "this user" : ""}
       />
     </div>
   );
-}
+};
 
 export default Users;

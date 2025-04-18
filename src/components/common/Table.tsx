@@ -1,4 +1,11 @@
-import { FaEdit, FaEye, FaTrash, FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
+import {
+  FaEdit,
+  FaEye,
+  FaSort,
+  FaSortDown,
+  FaSortUp,
+  FaTrash,
+} from "react-icons/fa";
 import { ITable } from "../../types";
 
 interface DynamicTableProps extends ITable {
@@ -12,29 +19,51 @@ interface DynamicTableProps extends ITable {
   searchTerm: string;
 }
 
-const DynamicTable = ({ data, onEdit, onDelete, onView, onSort, sortField, sortOrder, searchTerm, handleSearch }: DynamicTableProps) => {
- 
+const DynamicTable = ({
+  data,
+  onEdit,
+  onDelete,
+  onView,
+  onSort,
+  sortField,
+  sortOrder,
+  searchTerm,
+  handleSearch,
+}: DynamicTableProps) => {
+  const tableData = Array.isArray(data)
+    ? data
+    : Array.isArray((data as any)?.data)
+    ? (data as any).data
+    : [];
+  const columnKeys =
+    tableData.length > 0
+      ? Object.keys(tableData[0]).filter(
+          (key) => !Array.isArray(tableData[0][key]) && key !== "_id"
+        )
+      : [];
 
-  const tableData = Array.isArray(data) ? data : (Array.isArray((data as any)?.data) ? (data as any).data : []);
-  const columnKeys = tableData.length > 0 ? Object.keys(tableData[0]).filter(key => !Array.isArray(tableData[0][key]) && key !== '_id') : [];
-
-  const truncateText = (text: string | number | null | undefined, maxLength: number): string => {
-    if (text == null) return '';
+  const truncateText = (
+    text: string | number | null | undefined,
+    maxLength: number
+  ): string => {
+    if (text == null) return "";
     const stringText = String(text);
-    return stringText.length > maxLength ? stringText.slice(0, maxLength) + '...' : stringText;
+    return stringText.length > maxLength
+      ? stringText.slice(0, maxLength) + "..."
+      : stringText;
   };
 
   const renderProductContent = (key: string, value: any) => {
-    if (key === 'productThumbnail' || key === 'thumbnail' || key === 'picture') {
+    console.log(key, value, "key and value");
+    if (key === "productImages" || key === "thumbnail" || key === "picture") {
       return (
         <img
-          src={value}
+          src={value || ""}
           alt="Product Thumbnail"
-          className="w-full h-10 object-contain"
+          className="object-contain w-full h-10"
         />
       );
-    }
-    else if (key === 'productSample' || key === 'productFile') {
+    } else if (key === "productSample" || key === "productFile") {
       return (
         <a
           href={value}
@@ -49,11 +78,12 @@ const DynamicTable = ({ data, onEdit, onDelete, onView, onSort, sortField, sortO
     return truncateText(value, 20);
   };
 
-
   const renderSortIcon = (column: string) => {
     if (column !== sortField) return <FaSort />;
-    return sortOrder === 'asc' ? <FaSortUp /> : <FaSortDown />;
+    return sortOrder === "asc" ? <FaSortUp /> : <FaSortDown />;
   };
+
+  console.log(data, "data");
 
   return (
     <div className="w-full overflow-x-auto">
@@ -63,7 +93,7 @@ const DynamicTable = ({ data, onEdit, onDelete, onView, onSort, sortField, sortO
           placeholder="Search..."
           value={searchTerm}
           onChange={(e) => handleSearch(e)}
-          className="p-2 border rounded w-full"
+          className="w-full p-2 border rounded"
         />
       </div>
       <div className="overflow-x-auto">
@@ -73,38 +103,51 @@ const DynamicTable = ({ data, onEdit, onDelete, onView, onSort, sortField, sortO
               {columnKeys.map((key, index) => (
                 <th
                   key={index}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase cursor-pointer"
                   onClick={() => onSort(key)}
                 >
-                 <div className='flex items-center gap-2'>{key} {renderSortIcon(key)}</div>
+                  <div className="flex items-center gap-2">
+                    {key} {renderSortIcon(key)}
+                  </div>
                 </th>
               ))}
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {tableData.map((row: any, rowIndex: number) => (
               <tr key={rowIndex} className="hover:bg-gray-100">
                 {columnKeys
-                  .filter(key => key !== '_id')
+                  .filter((key) => key !== "_id")
                   .map((key: string, colIndex: number) => (
                     <td key={colIndex} className="px-6 py-4 whitespace-nowrap">
                       {renderProductContent(key, row[key])}
                     </td>
                   ))}
-                <td className="px-6 py-4 whitespace-nowrap flex items-center gap-2">
+                <td className="flex items-center gap-2 px-6 py-4 whitespace-nowrap">
                   {onView && (
-                    <button onClick={() => onView(row)} className="text-blue-600 hover:text-blue-900 flex items-center">
+                    <button
+                      onClick={() => onView(row)}
+                      className="flex items-center text-blue-600 hover:text-blue-900"
+                    >
                       <FaEye className="mr-1" /> View
                     </button>
                   )}
                   {onEdit && (
-                    <button onClick={() => onEdit(row)} className="text-yellow-600 hover:text-yellow-900 ml-2 flex items-center">
+                    <button
+                      onClick={() => onEdit(row)}
+                      className="flex items-center ml-2 text-yellow-600 hover:text-yellow-900"
+                    >
                       <FaEdit className="mr-1" /> Edit
                     </button>
                   )}
                   {onDelete && (
-                    <button onClick={() => onDelete(row)} className="text-red-600 hover:text-red-900 ml-2 flex items-center">
+                    <button
+                      onClick={() => onDelete(row)}
+                      className="flex items-center ml-2 text-red-600 hover:text-red-900"
+                    >
                       <FaTrash className="mr-1" /> Delete
                     </button>
                   )}

@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect } from "react";
+import debounce from "lodash/debounce";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Loader from "../../components/common/Loader";
+import Pagination from "../../components/common/Pagination";
 import DynamicTable from "../../components/common/Table";
 import { useAppliedJobQuery } from "../../features/career/careerApi";
 import { JobApplication } from "../../types";
-import debounce from "lodash/debounce";
-import Pagination from "../../components/common/Pagination";
-import Loader from "../../components/common/Loader";
 
 const ViewApplications = () => {
   const [sortOrder, setSortOrder] = useState<1 | -1>(-1);
@@ -12,14 +13,13 @@ const ViewApplications = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
-
+  const navigate = useNavigate();
   const { data, isLoading } = useAppliedJobQuery({
     sortOrder,
     searchTerm: debouncedSearchTerm,
     page: Number(currentPage),
     limit,
   });
-  console.log("data recieved from backend: ", data);
   console.log(data?.data?.jobs);
   const handleEdit = (application: JobApplication) => {
     console.log("Edit application:", application);
@@ -30,7 +30,7 @@ const ViewApplications = () => {
   };
 
   const handleView = (application: JobApplication) => {
-    console.log("View application:", application);
+    navigate(`/hiring/view-application/${application?._id}`);
   };
 
   const handleSort = () => {
@@ -66,15 +66,17 @@ const ViewApplications = () => {
   if (isLoading) return <Loader />;
   if (!data || !data.data)
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center h-screen">
         No data available
       </div>
     );
-  const { jobs, totalPages, totalJobs } = data?.data;
+  const { jobs, totalPages, totalJobs } = data.data;
+
+  console.log(jobs);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">View All Job Applications</h1>
+    <div className="container px-4 py-8 mx-auto">
+      <h1 className="mb-6 text-3xl font-bold">View All Job Applications</h1>
       <DynamicTable
         headings={[
           "Name",

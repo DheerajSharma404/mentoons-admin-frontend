@@ -72,11 +72,11 @@ export interface Product {
   productThumbnail: string;
   productSample: string;
   productFile: string;
-  author?:AuthorData[]
+  author?: string;
 }
 
 export interface JobApplication {
-  id: number;
+  _id: string;
   name: string;
   email: string;
   phone: string;
@@ -140,7 +140,8 @@ export interface DashboardDataResponse {
     totalProducts: number;
     salesData: {
       month: string;
-      sales: number;
+      totalAmount: number;
+      orderCount: number;
     }[];
   };
 }
@@ -226,7 +227,7 @@ export interface AssesmentReport {
 }
 
 export interface AuthorData {
-  _id:string;
-  name: string,
-  image: string,
+  _id: string;
+  name: string;
+  image: string;
 }

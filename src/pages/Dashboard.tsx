@@ -1,9 +1,9 @@
-import ModuleCards from "../components/dashboard/ModuleCards";
-import { useState, useEffect } from "react";
-import { IQuotes } from "../types";
-import { getQuotes } from "../services/quoteService";
-import Quotes from "../components/dashboard/Quotes";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import ModuleCards from "../components/dashboard/ModuleCards";
+import Quotes from "../components/dashboard/Quotes";
+import { getQuotes } from "../services/quoteService";
+import { IQuotes } from "../types";
 
 const Dashboard = () => {
   const [quotes, setQuotes] = useState<IQuotes[]>([]);
@@ -15,85 +15,67 @@ const Dashboard = () => {
       setQuotes(data);
       setLoading(false);
     };
-
-    fetchQuotes();
-
     const interval = setInterval(fetchQuotes, 10000);
+    fetchQuotes();
 
     return () => clearInterval(interval);
   }, []);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
-  };
-
   return (
-    <motion.div
-      className="bg-gray-100 h-screen overflow-auto"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
-      <div className="flex flex-col p-4 md:p-8 h-full bg-[#F7941D]">
-        <motion.h1
-          className="text-3xl md:text-4xl font-bold text-left mb-4 md:mb-6 text-gray-800"
-          variants={itemVariants}
-        >
-          Mentoons Admin
-        </motion.h1>
-
-        <div className="flex-grow grid grid-rows-2 gap-4 md:gap-6 h-full">
-          <motion.div
-            className="rounded-xl overflow-hidden shadow-lg"
-            variants={itemVariants}
-          >
-            {loading ? (
-              <div className="flex justify-center items-center bg-[#F7941D] h-full p-4 md:p-8">
-                <motion.p
-                  className="text-black text-lg"
-                  animate={{
-                    opacity: [0.5, 1, 0.5],
-                    scale: [0.98, 1, 0.98],
-                  }}
-                  transition={{
-                    duration: 2,
-                    ease: "easeInOut",
-                    repeat: Infinity,
-                  }}
-                >
-                  Loading quotes...
-                </motion.p>
-              </div>
-            ) : (
-              <Quotes quotes={quotes} />
-            )}
-          </motion.div>
-
-          <motion.div
-            className="overflow-auto"
-            variants={itemVariants}
-            style={{ maxHeight: "100%" }}
-          >
-            <ModuleCards />
-          </motion.div>
+    <div className="h-screen bg-gray-100">
+      <div className="">
+        <div className="flex flex-col p-6 md:p-12 ">
+          <h1 className="mb-6 text-3xl font-bold text-left text-gray-800 md:text-4xl">
+            Mentoons Admin
+          </h1>
+          <div className="flex flex-col space-y-6">
+            <div className="relative flex justify-center w-full">
+              <img
+                src="https://mentoons-website.s3.ap-northeast-1.amazonaws.com/logo/ec9141ccd046aff5a1ffb4fe60f79316.png"
+                alt="logo"
+                className="lg:h-[20rem] object-contain lg:object-cover "
+              />
+              <motion.img
+                src="/assets/football.png"
+                alt="team"
+                className="absolute bottom-0 right-0 hidden w-20 h-20 md:block"
+                animate={{
+                  y: [-16, 0],
+                }}
+                transition={{
+                  duration: 0.6,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "easeInOut",
+                }}
+              />
+              <motion.img
+                src="/assets/helicopter.png"
+                alt="helicopter"
+                className="absolute bottom-0 left-0 hidden w-20 h-20 rotate-180 md:block"
+                animate={{
+                  x: ["0%", "100%"],
+                }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "linear",
+                }}
+              />
+            </div>
+          </div>
+          {loading ? (
+            <p className="text-center text-gray-600">Loading...</p>
+          ) : (
+            <Quotes quotes={quotes} />
+          )}
+        </div>
+        <div className="w-full py-2">
+          <ModuleCards />
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

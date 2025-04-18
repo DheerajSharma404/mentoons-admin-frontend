@@ -29,8 +29,6 @@ import {
   ViewUser,
   Welcome,
 } from "./pages/index";
-import AddSKU from "./pages/productsModule/AddSKU";
-import AllSku from "./pages/productsModule/AllSku";
 import TaskStatistics from "./pages/TasksStaistics";
 import ProtectedRoutes from "./utils/ProtectedRoutes";
 const routes = [
@@ -117,28 +115,6 @@ const routes = [
       <MainLayout>
         <ProtectedRoutes>
           <AddProducts />
-        </ProtectedRoutes>
-      </MainLayout>
-    ),
-    exact: true,
-  },
-  {
-    path: "/add-sku",
-    component: (
-      <MainLayout>
-        <ProtectedRoutes>
-          <AddSKU />
-        </ProtectedRoutes>
-      </MainLayout>
-    ),
-    exact: true,
-  },
-  {
-    path: "/all-sku",
-    component: (
-      <MainLayout>
-        <ProtectedRoutes>
-          <AllSku />
         </ProtectedRoutes>
       </MainLayout>
     ),
