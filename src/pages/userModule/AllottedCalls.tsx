@@ -10,7 +10,7 @@ import {
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 
-// Define the structure of a call object
+
 interface Call {
   _id: string;
   name: string;
@@ -19,7 +19,7 @@ interface Call {
   status: keyof typeof statusConfig;
 }
 
-// Define status configuration types
+
 type StatusConfigType = {
   [key: string]: {
     bg: string;
@@ -61,7 +61,6 @@ const statusConfig: StatusConfigType = {
   },
 };
 
-// Sample data to display when no real data is available
 const sampleCalls: Call[] = [
   {
     _id: "sample-1",
