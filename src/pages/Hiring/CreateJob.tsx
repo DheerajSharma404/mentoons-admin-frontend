@@ -59,9 +59,9 @@ const CreateJob: React.FC = () => {
   });
   const jobData = data?.data;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(
-    typeof jobData?.thumbnail === "string" ? jobData.thumbnail : null
-  );
+  // const [previewImage, setPreviewImage] = useState<string | null>(
+  //   typeof jobData?.thumbnail === "string" ? jobData.thumbnail : null
+  // );
   const [indianStates, setIndianStates] = useState<string[]>([]);
   const [isLoadingStates, setIsLoadingStates] = useState(false);
 
@@ -253,7 +253,7 @@ const CreateJob: React.FC = () => {
       >
         {({ values, setFieldValue, isValid, dirty, errors, touched }) => (
           <Form className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
                 name="jobTitle"
                 label="Job Title"
@@ -287,7 +287,7 @@ const CreateJob: React.FC = () => {
                 <ErrorMessage
                   name="jobType"
                   component="div"
-                  className="text-red-500 text-sm"
+                  className="text-sm text-red-500"
                 />
               </div>
             </div>
@@ -303,7 +303,7 @@ const CreateJob: React.FC = () => {
                     Location
                   </label>
                   {isLoadingStates ? (
-                    <div className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                    <div className="w-full p-3 text-gray-500 border border-gray-300 rounded-md bg-gray-50">
                       Loading states...
                     </div>
                   ) : (
@@ -330,9 +330,9 @@ const CreateJob: React.FC = () => {
                       <option value="Other">Other</option>
                     </Field>
                   )}
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 pointer-events-none">
                     <svg
-                      className="fill-current h-4 w-4"
+                      className="w-4 h-4 fill-current"
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
                     >
@@ -362,9 +362,9 @@ const CreateJob: React.FC = () => {
                     <option value="draft">Draft</option>
                     <option value="closed">Closed</option>
                   </Field>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 pointer-events-none">
                     <svg
-                      className="fill-current h-4 w-4"
+                      className="w-4 h-4 fill-current"
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
                     >
@@ -378,12 +378,12 @@ const CreateJob: React.FC = () => {
                 <ErrorMessage
                   name="location"
                   component="div"
-                  className="text-red-500 text-sm w-1/2"
+                  className="w-1/2 text-sm text-red-500"
                 />
                 <ErrorMessage
                   name="status"
                   component="div"
-                  className="text-red-500 text-sm w-1/2"
+                  className="w-1/2 text-sm text-red-500"
                 />
               </div>
             </div>
@@ -410,7 +410,7 @@ const CreateJob: React.FC = () => {
               <ErrorMessage
                 name="jobDescription"
                 component="div"
-                className="text-red-500 text-sm"
+                className="text-sm text-red-500"
               />
             </div>
 

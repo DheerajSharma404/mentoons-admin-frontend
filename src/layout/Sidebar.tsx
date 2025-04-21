@@ -1,6 +1,12 @@
-import { FaBox, FaBriefcase, FaUsers } from "react-icons/fa";
+import {
+  FaBox,
+  FaBriefcase,
+  FaNewspaper,
+  FaQuestionCircle,
+  FaUsers,
+} from "react-icons/fa";
+import { GrWorkshop } from "react-icons/gr";
 import { NavLink, useNavigate } from "react-router-dom";
-
 const Sidebar = () => {
   const navigate = useNavigate();
   return (
@@ -60,6 +66,24 @@ const Sidebar = () => {
             { href: "/hiring-form", label: "Add Job" },
             { href: "/view-applications", label: "View Applications" },
           ]}
+        />
+        <SidebarSection
+          icon={<GrWorkshop className="text-[#ff9800]" />}
+          title="Workshops"
+          items={[
+            { href: "/workshop-enquiries", label: "Workshops Enquiries" },
+          ]}
+        />
+        <SidebarSection
+          icon={<FaQuestionCircle className="text-[#ff9800]" />}
+          title="General Queries"
+          items={[{ href: "/general-queries", label: "All Queries" }]}
+        />
+
+        <SidebarSection
+          icon={<FaNewspaper className="text-[#ff9800]" />}
+          title="Newsletter"
+          items={[{ href: "/newsletter", label: "All Newsletter" }]}
         />
       </nav>
     </div>

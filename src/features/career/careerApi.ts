@@ -1,9 +1,9 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import {
-   JobApplicationResponse,
-   JobData,
-   JobDataResponse,
-   singleJobDataResponse,
+  JobApplicationResponse,
+  JobData,
+  JobDataResponse,
+  singleJobDataResponse,
 } from "../../types";
 
 export const careerApiSlice = createApi({

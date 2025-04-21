@@ -6,15 +6,18 @@ import {
   AddProducts,
   AllJobs,
   AllottedCalls,
+  ApplicationDetails,
   AssesmentForm,
   AssesmentReports,
   CallRequest,
   CreateJob,
   Dashboard,
   DashboardAnalytics,
+  GeneralQueries,
   GetWorkshopEnquiries,
   JobDetails,
   LogIn,
+  Newsletter,
   ProductTable,
   Register,
   TaskDetails,
@@ -176,6 +179,17 @@ const routes = [
     exact: true,
   },
   {
+    path: "/view-applications/:applicationId",
+    component: (
+      <MainLayout>
+        <ProtectedRoutes>
+          <ApplicationDetails />
+        </ProtectedRoutes>
+      </MainLayout>
+    ),
+    exact: true,
+  },
+  {
     path: "/job-details/:jobId",
     component: (
       <MainLayout>
@@ -260,6 +274,24 @@ const routes = [
     component: (
       <MainLayout>
         <AssesmentReports />
+      </MainLayout>
+    ),
+    exact: true,
+  },
+  {
+    path: "/general-queries",
+    component: (
+      <MainLayout>
+        <GeneralQueries />
+      </MainLayout>
+    ),
+    exact: true,
+  },
+  {
+    path: "/newsletter",
+    component: (
+      <MainLayout>
+        <Newsletter />
       </MainLayout>
     ),
     exact: true,

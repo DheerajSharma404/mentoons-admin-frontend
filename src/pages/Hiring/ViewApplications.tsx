@@ -30,7 +30,7 @@ const ViewApplications = () => {
   };
 
   const handleView = (application: JobApplication) => {
-    navigate(`/hiring/view-application/${application?._id}`);
+    navigate(`/view-applications/${application?._id}`);
   };
 
   const handleSort = () => {
@@ -70,7 +70,7 @@ const ViewApplications = () => {
         No data available
       </div>
     );
-  const { jobs = [], totalPages, totalJobs } = data?.data;
+  const { jobs = [], totalPages, totalJobs } = data.data;
 
   return (
     <div className="container px-4 py-8 mx-auto">

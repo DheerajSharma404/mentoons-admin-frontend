@@ -3,7 +3,13 @@ import React, { useEffect, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import Loader from "../../components/common/Loader";
-import { ProductBase } from "../../types/productType";
+import {
+  AudioComicProduct,
+  ComicProduct,
+  PodcastProduct,
+  ProductBase,
+  ProductType,
+} from "../../types/productType";
 import { errorToast } from "../../utils/toastResposnse";
 const ViewProduct: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -124,7 +130,17 @@ const ViewProduct: React.FC = () => {
             <div className="mt-4">
               <h2 className="mb-2 text-xl font-semibold">Product Sample</h2>
               {product?.details &&
-                renderFilePreview(product?.details?.sampleUrl, "sample")}
+                (product.type === ProductType.WORKSHOP
+                  ? null
+                  : renderFilePreview(
+                      (
+                        product?.details as
+                          | ComicProduct["details"]
+                          | AudioComicProduct["details"]
+                          | PodcastProduct["details"]
+                      )?.sampleUrl || " ",
+                      "sample"
+                    ))}
             </div>
             <div className="mt-4">
               <h2 className="mb-2 text-xl font-semibold">Product File</h2>
