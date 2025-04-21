@@ -3,26 +3,61 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { signInValidation, initialValues } from "../../validations/validations";
+import { useSignIn } from "@clerk/clerk-react";
 
 const Signin = () => {
   const [isPasswordVisible, setPasswordVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { signIn, isLoaded: clerkLoaded } = useSignIn();
 
   const formik = useFormik({
     initialValues,
     validationSchema: signInValidation,
-    onSubmit: (values, { setSubmitting }) => {
-      console.log(values);
-      setTimeout(() => {
-        navigate("/dashboard");
+    onSubmit: async (values, { setSubmitting }) => {
+      if (!clerkLoaded || !signIn) {
+        setError("Authentication service is not available");
         setSubmitting(false);
-      }, 1000);
+        return;
+      }
+
+      setIsLoading(true);
+      setError("");
+
+      try {
+        // Start the sign-in process with Clerk
+        const result = await signIn.create({
+          identifier: values.emailOrPhone,
+          password: values.password,
+        });
+
+        if (result.status === "complete") {
+          navigate("/dashboard");
+        }
+      } catch (err) {
+        console.error("Sign-in error:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to sign in. Please try again."
+        );
+      } finally {
+        setIsLoading(false);
+        setSubmitting(false);
+      }
     },
   });
 
   return (
     <div className="rounded-xl flex flex-col justify-center items-center gap-6 w-full max-w-md p-6 bg-white poppins mt-5 shadow-lg sm:p-8">
       <h1 className="font-medium text-3xl text-center text-[#333]">Sign in</h1>
+
+      {error && (
+        <div className="w-full p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
 
       <form
         onSubmit={formik.handleSubmit}
@@ -83,15 +118,15 @@ const Signin = () => {
 
         <button
           type="submit"
-          disabled={formik.isSubmitting}
+          disabled={formik.isSubmitting || isLoading || !clerkLoaded}
           className="w-full rounded-full bg-blue-600 hover:bg-blue-700 p-3 text-white cursor-pointer transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          {formik.isSubmitting ? "Logging in..." : "Log In"}
+          {isLoading || formik.isSubmitting ? "Logging in..." : "Log In"}
         </button>
       </form>
 
       <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0 w-full text-sm mt-2">
-        <Link to="#" className="text-blue-600 hover:underline">
+        <Link to="/reset-password" className="text-blue-600 hover:underline">
           Forget your password?
         </Link>
       </div>
