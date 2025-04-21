@@ -2,7 +2,25 @@ import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
-const statusConfig: any = {
+interface Call {
+  _id: string;
+  name: string;
+  phone: string;
+  email: string;
+  status: keyof typeof statusConfig;
+}
+
+type StatusConfigType = {
+  [key: string]: {
+    bg: string;
+    text: string;
+    border: string;
+    label: string;
+    icon?: string;
+  };
+};
+
+const statusConfig: StatusConfigType = {
   "reached out": {
     bg: "bg-blue-100",
     text: "text-blue-800",
@@ -31,12 +49,13 @@ const statusConfig: any = {
 
 const AllottedCalls = () => {
   const { getToken } = useAuth();
-  const [allottedCalls, setAllottedCalls] = useState<any[]>([]);
+  const [allottedCalls, setAllottedCalls] = useState<Call[]>([]);
 
   const fetchAllottedCalls = async () => {
     try {
       const response = await axios.get(
         `https://mentoons-backend-zlx3.onrender.com/api/v1/user/allocatedCalls`,
+        // `http://localhost:4000/api/v1/user/allocatedCalls`,
         {
           headers: {
             Authorization: `Bearer ${await getToken()}`,

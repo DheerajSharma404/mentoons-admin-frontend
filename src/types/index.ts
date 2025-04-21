@@ -72,7 +72,7 @@ export interface Product {
   productThumbnail: string;
   productSample: string;
   productFile: string;
-  author?: string;
+  author?: AuthorData[];
 }
 
 export interface JobApplication {
@@ -94,6 +94,7 @@ export interface JobData {
   skillsRequired: string[];
   location?: string;
   jobType?: string;
+  status?: string;
   thumbnail: string | File | null;
   applicationCount?: number;
   applicationDetails?: JobApplication[];
@@ -134,6 +135,10 @@ export interface DashboardDataResponse {
   success: boolean;
   message: string;
   data: {
+    completedOrdersInMonthOrder: {
+      month: string;
+      sales: number;
+    }[];
     totalJobs: number;
     totalUsers: number;
     totalJobApplications: number;

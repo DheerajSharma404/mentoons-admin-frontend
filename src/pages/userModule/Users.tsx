@@ -99,6 +99,7 @@ const Users = () => {
         const token = await getToken();
         const response = await axios.get(
           "https://mentoons-backend-zlx3.onrender.com/api/v1/user/all-users",
+          // "http://localhost:4000/api/v1/user/all-users",
           {
             headers: { Authorization: `Bearer ${token}` },
             params: {

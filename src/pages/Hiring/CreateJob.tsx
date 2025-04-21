@@ -7,10 +7,11 @@ import {
   Formik,
   FormikHelpers,
 } from "formik";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import Loader from "../../components/common/Loader";
+import LoadingModal from "../../components/common/loading";
 import {
   useCreateJobMutation,
   useGetJobByIdQuery,
@@ -24,10 +25,27 @@ interface JobFormValues {
   jobDescription: string;
   skillsRequired: string[];
   thumbnail: File | string | null;
-  location?: string;
-  jobType?: string;
+  location: string;
+  jobType: string;
+  status?: string;
   applicationCount?: number;
 }
+
+interface ApiError {
+  data?: {
+    message?: string;
+  };
+  message?: string;
+}
+
+const JOB_TYPES = [
+  { value: "FULLTIME", label: "Full-time" },
+  { value: "PARTTIME", label: "Part-time" },
+  { value: "CONTRACT", label: "Contract" },
+  { value: "INTERNSHIP", label: "Internship" },
+  { value: "REMOTE", label: "Remote" },
+  { value: "HYBRID", label: "Hybrid" },
+];
 
 const CreateJob: React.FC = () => {
   const location = useLocation();
@@ -40,58 +58,158 @@ const CreateJob: React.FC = () => {
     skip: !jobId,
   });
   const jobData = data?.data;
-  console.log(jobData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(
+    typeof jobData?.thumbnail === "string" ? jobData.thumbnail : null
+  );
+  const [indianStates, setIndianStates] = useState<string[]>([]);
+  const [isLoadingStates, setIsLoadingStates] = useState(false);
+
+  const [isLoadingModalOpen, setIsLoadingModalOpen] = useState(false);
+  const [currentLoadingStep, setCurrentLoadingStep] = useState(0);
+  const loadingSteps = [
+    "Analyzing submission data",
+    "Uploading image",
+    "Saving job information",
+    "Finalizing Process",
+  ];
+
+  useEffect(() => {
+    const fetchStates = async () => {
+      setIsLoadingStates(true);
+      try {
+        const response = await fetch(
+          "https://cdn-api.co-vin.in/api/v2/admin/location/states"
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch states");
+        }
+        const data = await response.json();
+
+        const stateNames = data.states.map(
+          (state: { state_id: number; state_name: string }) => state.state_name
+        );
+        stateNames.sort();
+        setIndianStates(stateNames);
+      } catch (error) {
+        console.error("Error fetching states:", error);
+        setIndianStates([
+          "Andhra Pradesh",
+          "Arunachal Pradesh",
+          "Assam",
+          "Bihar",
+          "Chhattisgarh",
+          "Goa",
+          "Gujarat",
+          "Haryana",
+          "Himachal Pradesh",
+          "Jharkhand",
+          "Karnataka",
+          "Kerala",
+          "Madhya Pradesh",
+          "Maharashtra",
+          "Manipur",
+          "Meghalaya",
+          "Mizoram",
+          "Nagaland",
+          "Odisha",
+          "Punjab",
+          "Rajasthan",
+          "Sikkim",
+          "Tamil Nadu",
+          "Telangana",
+          "Tripura",
+          "Uttar Pradesh",
+          "Uttarakhand",
+          "West Bengal",
+          "Andaman and Nicobar Islands",
+          "Chandigarh",
+          "Dadra and Nagar Haveli and Daman and Diu",
+          "Delhi",
+          "Jammu and Kashmir",
+          "Ladakh",
+          "Lakshadweep",
+          "Puducherry",
+        ]);
+      } finally {
+        setIsLoadingStates(false);
+      }
+    };
+
+    fetchStates();
+  }, []);
+
   const uploadFile = async (file: File): Promise<string> => {
+    setCurrentLoadingStep(1);
     const token = await getToken();
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(
-      "https://mentoons-backend-zlx3.onrender.com/api/v1/upload/file",
-      {
-        method: "POST",
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      const response = await fetch(
+        "https://mentoons-backend-zlx3.onrender.com/api/v1/upload/file",
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to upload file");
       }
-    );
 
-    if (!response.ok) {
-      throw new Error("Failed to upload file");
+      const data = await response.json();
+      return data.data.fileDetails.url;
+    } catch (error) {
+      console.error("File upload error:", error);
+      throw new Error("Failed to upload file. Please try again.");
     }
-
-    const data = await response.json();
-    return data.data.imageUrl;
   };
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFormSubmit = async (
     values: JobFormValues,
     { setSubmitting }: FormikHelpers<JobFormValues>
   ) => {
     setIsSubmitting(true);
+    setIsLoadingModalOpen(true);
+    setCurrentLoadingStep(0);
+
     try {
       let thumbnailUrl = values.thumbnail;
       if (values.thumbnail instanceof File) {
         thumbnailUrl = await uploadFile(values.thumbnail);
+      } else if (typeof values.thumbnail === "string") {
+        thumbnailUrl = values.thumbnail;
+        setCurrentLoadingStep(1);
       }
 
+      setCurrentLoadingStep(2);
       const jobData = { ...values, thumbnail: thumbnailUrl };
 
       if (jobId) {
         const res = await updateJob({ ...jobData, _id: jobId }).unwrap();
         successToast(res.message || "Job updated successfully");
+        setCurrentLoadingStep(3);
       } else {
         const res = await createJob(jobData as JobData).unwrap();
-        console.log(res, "res");
         successToast(res.message || "Job created successfully");
       }
-      navigate("/all-jobs");
-    } catch (error: any) {
-      errorToast(error?.data?.message || "Failed to create job");
+
+      setCurrentLoadingStep(3);
+
+      setTimeout(() => {
+        navigate("/all-jobs");
+      }, 2000);
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      errorToast(
+        apiError?.data?.message || apiError?.message || "Failed to save job"
+      );
       console.error("Error submitting job:", error);
+      setIsLoadingModalOpen(false);
     } finally {
       setSubmitting(false);
       setIsSubmitting(false);
@@ -105,6 +223,7 @@ const CreateJob: React.FC = () => {
     jobDescription: jobData?.jobDescription || "",
     skillsRequired: jobData?.skillsRequired || [],
     thumbnail: jobData?.thumbnail || null,
+    status: jobData?.status || "open",
     location: jobData?.location || "",
     jobType: jobData?.jobType || "",
     applicationCount: jobData?.applicationCount || 0,
@@ -132,28 +251,169 @@ const CreateJob: React.FC = () => {
         onSubmit={handleFormSubmit}
         enableReinitialize
       >
-        {({ values, setFieldValue, isValid, dirty }) => (
+        {({ values, setFieldValue, isValid, dirty, errors, touched }) => (
           <Form className="space-y-6">
-            <FormField name="jobTitle" label="Job Title" />
-            <FormField
-              name="jobDescription"
-              label="Job Description"
-              as="textarea"
-              rows={4}
-            />
-            <FormField name="location" label="Location" />
-            <Field
-              name="jobType"
-              label="Job Type"
-              as="select"
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select Job Type</option>
-              <option value="FULLTIME">Full-time</option>
-              <option value="PARTTIME">Part-time</option>
-              <option value="CONTRACT">Contract</option>
-              <option value="INTERNSHIP">Internship</option>
-            </Field>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                name="jobTitle"
+                label="Job Title"
+                placeholder="e.g., Senior Software Engineer"
+                error={!!errors.jobTitle && !!touched.jobTitle}
+              />
+              <div className="space-y-2">
+                <label
+                  htmlFor="jobType"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Job Type <span className="text-red-500">*</span>
+                </label>
+                <Field
+                  id="jobType"
+                  name="jobType"
+                  as="select"
+                  className={`w-full p-3 border ${
+                    errors.jobType && touched.jobType
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                >
+                  <option value="">Select Job Type</option>
+                  {JOB_TYPES.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </Field>
+                <ErrorMessage
+                  name="jobType"
+                  component="div"
+                  className="text-red-500 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex gap-4">
+                {/* Location Dropdown */}
+                <div className="relative w-1/2">
+                  <label
+                    htmlFor="location"
+                    className="block mb-1 font-medium text-gray-700"
+                  >
+                    Location
+                  </label>
+                  {isLoadingStates ? (
+                    <div className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                      Loading states...
+                    </div>
+                  ) : (
+                    <Field
+                      id="location"
+                      name="location"
+                      as="select"
+                      className={`w-full p-3 border ${
+                        errors.location && touched.location
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-10`}
+                    >
+                      <option value="">Select State</option>
+                      {indianStates.map((state) => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))}
+                      <option value="Remote">Remote</option>
+                      <option value="Multiple Locations">
+                        Multiple Locations
+                      </option>
+                      <option value="Other">Other</option>
+                    </Field>
+                  )}
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <svg
+                      className="fill-current h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="relative w-1/2">
+                  <label
+                    htmlFor="status"
+                    className="block mb-1 font-medium text-gray-700"
+                  >
+                    Status
+                  </label>
+                  <Field
+                    id="status"
+                    name="status"
+                    as="select"
+                    className={`w-full p-3 border ${
+                      errors.status && touched.status
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-10`}
+                  >
+                    <option value="">Select Status</option>
+                    <option value="open">Open</option>
+                    <option value="draft">Draft</option>
+                    <option value="closed">Closed</option>
+                  </Field>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <svg
+                      className="fill-current h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <ErrorMessage
+                  name="location"
+                  component="div"
+                  className="text-red-500 text-sm w-1/2"
+                />
+                <ErrorMessage
+                  name="status"
+                  component="div"
+                  className="text-red-500 text-sm w-1/2"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="jobDescription"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Job Description <span className="text-red-500">*</span>
+              </label>
+              <Field
+                id="jobDescription"
+                name="jobDescription"
+                as="textarea"
+                rows={6}
+                placeholder="Provide a detailed description of the role, responsibilities, and requirements"
+                className={`w-full p-3 border ${
+                  errors.jobDescription && touched.jobDescription
+                    ? "border-red-500"
+                    : "border-gray-300"
+                } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+              <ErrorMessage
+                name="jobDescription"
+                component="div"
+                className="text-red-500 text-sm"
+              />
+            </div>
+
             <div className="space-y-2">
               <label
                 htmlFor="skillsRequired"
@@ -258,6 +518,13 @@ const CreateJob: React.FC = () => {
           </Form>
         )}
       </Formik>
+      <LoadingModal
+        currentStep={currentLoadingStep}
+        isOpen={isLoadingModalOpen}
+        onClose={() => setIsLoadingModalOpen(false)}
+        steps={loadingSteps}
+        title={jobId ? "Updating Job" : "Creating New Job"}
+      />
     </div>
   );
 };
@@ -267,17 +534,22 @@ const FormField: React.FC<{
   label: string;
   as?: string;
   rows?: number;
-}> = ({ name, label, as = "input", rows }) => (
+  placeholder?: string;
+  error?: boolean;
+}> = ({ name, label, as = "input", rows, placeholder, error }) => (
   <div className="space-y-2">
     <label htmlFor={name} className="block text-sm font-medium text-gray-700">
-      {label}
+      {label} <span className="text-red-500">*</span>
     </label>
     <Field
       id={name}
       name={name}
       as={as}
       rows={rows}
-      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      placeholder={placeholder}
+      className={`w-full p-3 border ${
+        error ? "border-red-500" : "border-gray-300"
+      } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
     />
     <ErrorMessage
       name={name}

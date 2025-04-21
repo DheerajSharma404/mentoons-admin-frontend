@@ -70,9 +70,7 @@ const ViewApplications = () => {
         No data available
       </div>
     );
-  const { jobs, totalPages, totalJobs } = data.data;
-
-  console.log(jobs);
+  const { jobs = [], totalPages, totalJobs } = data?.data;
 
   return (
     <div className="container px-4 py-8 mx-auto">

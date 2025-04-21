@@ -6,6 +6,7 @@ export const dashboardApiSlice = createApi({
   reducerPath: "dashboardApi",
   baseQuery: fetchBaseQuery({
     baseUrl: "https://mentoons-backend-zlx3.onrender.com/api/v1/dashboard",
+    // baseUrl: "http://localhost:4000/api/v1/dashboard",
   }),
   tagTypes: ["Dashboard"],
   endpoints: (builder) => ({
