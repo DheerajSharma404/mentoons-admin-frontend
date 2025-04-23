@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import { useState, useEffect } from "react";
+import moment from "moment";
 import { motion } from "framer-motion";
 import {
   ArrowPathIcon,
@@ -8,17 +9,25 @@ import {
   EnvelopeIcon,
   UserIcon,
   ChevronDownIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-
+import Pagination from "../../components/common/Pagination";
+import { toast } from "sonner";
+import { FaClock, FaEye, FaUserMd } from "react-icons/fa";
+import PsychologistDetails, {
+  Psychologist,
+} from "../../components/common/employeeDetailModal";
 
 interface Call {
   _id: string;
   name: string;
   phone: string;
   email: string;
+  time: string;
+  date: string;
   status: keyof typeof statusConfig;
+  psychologist: Psychologist;
 }
-
 
 type StatusConfigType = {
   [key: string]: {
@@ -38,11 +47,11 @@ const statusConfig: StatusConfigType = {
     label: "Reached Out",
     icon: "📞",
   },
-  "converted to lead": {
+  completed: {
     bg: "bg-green-100",
     text: "text-green-800",
     border: "border-green-200",
-    label: "Converted to Lead",
+    label: "completed",
     icon: "✅",
   },
   "awaiting outreach": {
@@ -52,48 +61,20 @@ const statusConfig: StatusConfigType = {
     label: "Awaiting Outreach",
     icon: "⏳",
   },
-  "conversion unsuccessful": {
+  cancelled: {
     bg: "bg-red-100",
     text: "text-red-800",
     border: "border-red-200",
-    label: "Conversion Unsuccessful",
+    label: "Cancelled",
     icon: "❌",
   },
 };
 
-const sampleCalls: Call[] = [
-  {
-    _id: "sample-1",
-    name: "John Smith",
-    phone: "+91 98765 43210",
-    email: "john.smith@example.com",
-    status: "awaiting outreach",
-  },
-  {
-    _id: "sample-2",
-    name: "Priya Sharma",
-    phone: "+91 87654 32109",
-    email: "priya.sharma@example.com",
-    status: "reached out",
-  },
-  {
-    _id: "sample-3",
-    name: "Raj Patel",
-    phone: "+91 76543 21098",
-    email: "raj.patel@example.com",
-    status: "converted to lead",
-  },
-  {
-    _id: "sample-4",
-    name: "Ananya Singh",
-    phone: "+91 65432 10987",
-    email: "ananya.singh@example.com",
-    status: "conversion unsuccessful",
-  },
-];
-
 const AllottedCalls = () => {
   const { getToken } = useAuth();
+  const [showDetailModal, setDetailModal] = useState(false);
+  const [selectedPsychologist, setSelectedPsychologist] =
+    useState<Psychologist | null>(null);
   const [allottedCalls, setAllottedCalls] = useState<Call[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -104,12 +85,19 @@ const AllottedCalls = () => {
     [key: string]: boolean;
   }>({});
 
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+  const [totalItems, setTotalItems] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(1);
+
   const fetchAllottedCalls = async () => {
     setIsLoading(true);
     try {
       const token = await getToken();
       const response = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/user/allocatedCalls`,
+        `${
+          import.meta.env.VITE_BASE_URL
+        }/admin/sessioncalls?search=${searchTerm}&sortField=${sortField}&sortOrder=${sortDirection}&page=${currentPage}&limit=${limit}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -122,24 +110,42 @@ const AllottedCalls = () => {
       if (fetchedCalls && fetchedCalls.length > 0) {
         setAllottedCalls(fetchedCalls);
         setShowingSampleData(false);
-      } else {
-        // Use sample data if no calls were found
-        setAllottedCalls(sampleCalls);
-        setShowingSampleData(true);
+
+        setTotalItems(response.data.data.totalItems || fetchedCalls.length);
+        setTotalPages(
+          response.data.data.totalPages ||
+            Math.ceil(fetchedCalls.length / limit)
+        );
       }
     } catch (error) {
       console.error("Error fetching allotted calls:", error);
-      // Use sample data if there was an error
-      setAllottedCalls(sampleCalls);
-      setShowingSampleData(true);
+      toast.error("Error fetching allotted calls");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handlePsychologistClick = async (psychologist: Psychologist) => {
+    setSelectedPsychologist(psychologist);
+    setDetailModal(true);
+  };
+
   useEffect(() => {
     fetchAllottedCalls();
-  }, []);
+  }, [currentPage, limit, sortField, sortDirection]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
 
   const handleSort = (field: keyof Call) => {
     if (sortField === field) {
@@ -148,6 +154,7 @@ const AllottedCalls = () => {
       setSortField(field);
       setSortDirection("asc");
     }
+    setCurrentPage(1);
   };
 
   const toggleExpandCard = (id: string) => {
@@ -207,6 +214,10 @@ const AllottedCalls = () => {
     fetchAllottedCalls();
   };
 
+  const handleSearch = () => {
+    fetchAllottedCalls();
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -243,21 +254,19 @@ const AllottedCalls = () => {
     );
   }
 
-  // Mobile Card View
   const renderMobileCards = () => {
     return (
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="space-y-4 md:hidden"
+        className="space-y-4 lg:hidden"
       >
         {sortedCalls.map((call) => (
           <motion.div
             key={call._id}
             className="bg-white rounded-lg shadow overflow-hidden"
             variants={itemVariants}
-            whileHover={{ scale: 1.01, transition: { duration: 0.2 } }}
           >
             <div
               className="p-4 cursor-pointer"
@@ -325,6 +334,38 @@ const AllottedCalls = () => {
                       {call.email}
                     </p>
                   </div>
+                  <div>
+                    <div className="flex items-center">
+                      <FaUserMd className="w-4 h-4 text-gray-500" />
+                      <span className="ml-2 text-xs text-gray-500">
+                        Psychologist
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-900 break-all flex items-center gap-3">
+                      {call.psychologist.name}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePsychologistClick(call.psychologist);
+                        }}
+                        className="text-blue-500 hover:text-blue-700 transition-colors"
+                      >
+                        <FaEye />
+                      </button>
+                    </p>
+                  </div>
+                  <div>
+                    <div className="flex items-center">
+                      <FaClock className="w-4 h-4 text-gray-500" />
+                      <span className="ml-2 text-xs text-gray-500">
+                        Scheduled At
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-900 break-all">
+                      {moment(call.time, "HH:mm").format("h:mm A")}{" "}
+                      &nbsp;|&nbsp; {moment(call.date).format("MMMM D, YYYY")}
+                    </p>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -334,16 +375,15 @@ const AllottedCalls = () => {
     );
   };
 
-  // Desktop Table View
   const renderDesktopTable = () => {
     return (
-      <div className="hidden md:block overflow-hidden">
+      <div className="hidden lg:block overflow-hidden">
         <div className="overflow-x-auto rounded-lg shadow">
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
               <tr className="bg-gray-50">
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                   onClick={() => handleSort("name")}
                 >
                   <div className="flex items-center">
@@ -357,7 +397,7 @@ const AllottedCalls = () => {
                   </div>
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                   onClick={() => handleSort("phone")}
                 >
                   <div className="flex items-center">
@@ -371,7 +411,7 @@ const AllottedCalls = () => {
                   </div>
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                   onClick={() => handleSort("email")}
                 >
                   <div className="flex items-center">
@@ -385,7 +425,35 @@ const AllottedCalls = () => {
                   </div>
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => handleSort("psychologist")}
+                >
+                  <div className="flex items-center">
+                    <FaUserMd className="w-4 h-4 mr-1" />
+                    Psychologist
+                    {sortField === "psychologist" && (
+                      <span className="ml-1">
+                        {sortDirection === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th
+                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => handleSort("time")}
+                >
+                  <div className="flex items-center">
+                    <FaClock className="w-4 h-4 mr-1" />
+                    Scheduled
+                    {sortField === "time" && (
+                      <span className="ml-1">
+                        {sortDirection === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th
+                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                   onClick={() => handleSort("status")}
                 >
                   <div className="flex items-center">
@@ -410,38 +478,65 @@ const AllottedCalls = () => {
                   key={call._id}
                   className="hover:bg-gray-50 transition-colors"
                   variants={itemVariants}
-                  whileHover={{ scale: 1.01, transition: { duration: 0.2 } }}
                 >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
-                        <span className="text-gray-600 text-lg font-medium">
+                  <td className="px-3 sm:px-1 xl:px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center justify-center">
+                      <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 bg-gray-200 rounded-full flex items-center justify-center">
+                        <span className="text-gray-600 text-sm lg:text-md xl:text-lg font-medium">
                           {call.name ? call.name.charAt(0).toUpperCase() : "?"}
                         </span>
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                      <div className="ml-2 sm:ml-4">
+                        <div className="text-xs lg:text-[13px] xl:text-sm font-medium text-gray-900">
                           {call.name}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <PhoneIcon className="w-4 h-4 mr-2 text-gray-500" />
+                  <td className="px-3 sm:px-1 xl:px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center text-xs lg:text-[13px] xl:text-sm text-gray-900">
                       {call.phone}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <EnvelopeIcon className="w-4 h-4 mr-2 text-gray-500" />
-                      {call.email}
+                  <td className="px-3 sm:px-1 xl:px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center text-xs lg:text-[13px] xl:text-sm text-gray-900">
+                      <span className="truncate max-w-[150px] xl:max-w-none">
+                        {call.email}
+                      </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-1 xl:px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-2 sm:gap-5 text-xs lg:text-[13px] xl:text-sm text-gray-900">
+                      <span className="truncate max-w-[100px] xl:max-w-none">
+                        {call.psychologist.name}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePsychologistClick(call.psychologist);
+                        }}
+                        className="text-blue-500 hover:text-blue-700 transition-colors"
+                      >
+                        <FaEye />
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-3 sm:px-1 xl:px-6 py-4 whitespace-nowrap">
+                    <div className="flex flex-col xl:flex-row xl:items-center text-xs lg:text-[13px] xl:text-sm text-gray-900">
+                      <div className="flex items-center">
+                        {moment(call.time, "HH:mm").format("h:mm A")}
+                      </div>
+                      <span className="hidden xl:inline mx-1">|</span>
+                      <div className="mt-1 xl:mt-0">
+                        {moment(call.date).format("MMM D, YYYY")}
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="px-3 sm:px-1 xl:px-6 py-4 whitespace-nowrap">
                     <motion.span
                       whileHover={{ scale: 1.05 }}
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
+                      className={`inline-flex items-center px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs lg:text-[13px] xl:text-sm ${
                         statusConfig[call.status]?.bg || "bg-gray-100"
                       } ${statusConfig[call.status]?.text || "text-gray-800"} ${
                         statusConfig[call.status]?.border || "border-gray-200"
@@ -463,15 +558,10 @@ const AllottedCalls = () => {
   };
 
   return (
-    <div className="px-3 sm:px-6 py-4 max-w-7xl mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4"
-      >
+    <div className="px-2 sm:px-6 py-4 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
             Allotted Calls
           </h1>
           {showingSampleData && (
@@ -480,7 +570,7 @@ const AllottedCalls = () => {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
           <div className="relative w-full sm:w-64">
             <input
               type="text"
@@ -488,49 +578,68 @@ const AllottedCalls = () => {
               className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSearch();
+                }
+              }}
             />
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg
-                className="h-4 w-4 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+              <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
             </div>
           </div>
-          <button
-            onClick={refreshData}
-            className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
-            title="Refresh data"
-            aria-label="Refresh data"
-          >
-            <ArrowPathIcon className="w-5 h-5" />
-          </button>
+          <div className="flex w-full sm:w-auto gap-2">
+            <button
+              onClick={handleSearch}
+              className="p-2 flex-1 sm:flex-none bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
+              title="Search"
+              aria-label="Search"
+            >
+              <MagnifyingGlassIcon className="h-5 w-5" />
+            </button>
+            <button
+              onClick={refreshData}
+              className="p-2 flex-1 sm:flex-none bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
+              title="Refresh data"
+              aria-label="Refresh data"
+            >
+              <ArrowPathIcon className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Conditional rendering based on screen size */}
-      <div className="bg-white sm:bg-transparent rounded-lg">
+      <div className="bg-transparent rounded-lg">
         {renderMobileCards()}
         {renderDesktopTable()}
+      </div>
+
+      <div className="mt-4 overflow-x-auto">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          limit={limit}
+          onLimitChange={handleLimitChange}
+          onPageChange={handlePageChange}
+        />
       </div>
 
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="mt-4 text-center text-xs sm:text-sm text-gray-500"
+        className="mt-2 sm:mt-4 text-center text-xs sm:text-sm text-gray-500"
       >
-        Showing {sortedCalls.length} of {allottedCalls.length} calls
+        Showing {sortedCalls.length} of {totalItems} calls
         {showingSampleData && " (sample data)"}
       </motion.div>
+      {showDetailModal && selectedPsychologist && (
+        <PsychologistDetails
+          onClose={() => setDetailModal(false)}
+          psychologist={selectedPsychologist}
+        />
+      )}
     </div>
   );
 };

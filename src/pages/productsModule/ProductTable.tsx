@@ -7,7 +7,7 @@ import Loader from "../../components/common/Loader";
 import Pagination from "../../components/common/Pagination";
 import DynamicTable from "../../components/common/Table";
 import { Product } from "../../types";
-import { headings } from "../../utils/constants";
+import axios from "axios";
 
 const ProductTable = () => {
   const navigate = useNavigate();
@@ -103,26 +103,57 @@ const ProductTable = () => {
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_BASE_URL}/products?limit=${limit}&page=${currentPage}&sort=${sortOrder}&search=${debouncedSearchTerm}`
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/products`,
+          {
+            params: {
+              limit,
+              page: currentPage,
+              sort: sortOrder,
+              search: debouncedSearchTerm,
+            },
+          }
         );
-        const result = await response.json();
-        console.log(result, "osoo");
-        if (result.success && Array.isArray(result.data.products)) {
-          setProducts(result.data.products);
+
+        const result = response.data;
+        console.log(result.data, "osoo");
+
+        if (Array.isArray(result.data) && result.data.length > 0) {
+          const productDetails = result.data.map((p: Product) => {
+            const authorOrNarrator = p.details.host
+              ? p.details.host
+              : "narrator" in p.details
+              ? p.details.narrator
+              : "author" in p.details
+              ? p.details.author
+              : "";
+            return {
+              _id: p._id,
+              title: p.title,
+              description: p.description,
+              ageCategory: p.ageCategory,
+              productThumbnail: p.productImages[0]?.imageUrl,
+              productFile: p.orignalProductSrc,
+              author: authorOrNarrator,
+            };
+          });
+          setProducts(productDetails);
           setTotalPages(result.data.totalPages);
-          setTotalProducts(result.data.products.length);
+          setTotalProducts(result.data.length);
         } else {
+          toast.error("Fetched data is not in the expected format");
           console.error("Fetched data is not in the expected format:", result);
           setProducts([]);
         }
       } catch (error) {
+        toast.error("Error fetching products");
         console.error("Error fetching products:", error);
         setProducts([]);
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchProducts();
   }, [limit, currentPage, sortOrder, debouncedSearchTerm]);
 
@@ -134,11 +165,10 @@ const ProductTable = () => {
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-6">Products</h1>
       {isLoading ? (
-        <Loader /> // Show loader while loading
+        <Loader />
       ) : (
         <>
           <DynamicTable
-            headings={headings}
             data={products}
             onEdit={editProduct}
             onDelete={removeProduct}
@@ -164,7 +194,7 @@ const ProductTable = () => {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
         itemName={
-          productToDelete ? productToDelete.productTitle || "this product" : ""
+          productToDelete ? productToDelete.title || "this product" : ""
         }
       />
     </div>

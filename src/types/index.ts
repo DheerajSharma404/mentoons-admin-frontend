@@ -64,15 +64,40 @@ export interface ITable {
   headings: string[];
   data: any[];
 }
+
+type Details =
+  | {
+      narrator: string;
+      language: string;
+      duration: string;
+      format: string;
+      sampleDuration: string;
+      sampleUrl: string;
+      host: string;
+    }
+  | {
+      author: string;
+      language: string;
+      duration: string;
+      format: string;
+      sampleDuration: string;
+      sampleUrl: string;
+      host: string;
+    };
+
 export interface Product {
   _id: string;
-  productTitle: string;
-  productDescription: string;
-  productCategory: string;
-  productThumbnail: string;
-  productSample: string;
-  productFile: string;
-  author?: AuthorData[];
+  title: string;
+  description: string;
+  ageCategory: string;
+  productSample?: string;
+  author?: string;
+  details: Details;
+  orignalProductSrc: string;
+  productImages: {
+    imageUrl: string;
+    _id: string;
+  }[];
 }
 
 export interface JobApplication {

@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { signInValidation, initialValues } from "../../validations/validations";
-import { useSignIn } from "@clerk/clerk-react";
+import { useSignIn, useClerk, useAuth } from "@clerk/clerk-react";
+import axios from "axios";
+import { toast } from "sonner";
 
 const Signin = () => {
   const [isPasswordVisible, setPasswordVisible] = useState(false);
@@ -11,37 +13,83 @@ const Signin = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { signIn, isLoaded: clerkLoaded } = useSignIn();
+  const { signOut } = useClerk();
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    const checkSessionAndRedirect = async () => {
+      try {
+        const token = await getToken();
+        console.log("Frontend Clerk token:", token);
+
+        if (token) {
+          const { data } = await axios.get(
+            `${import.meta.env.VITE_BASE_URL}/admin/checkrole?check=true`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          console.log("Backend response:", data);
+
+          if (data.success && ["admin", "superadmin"].includes(data.role)) {
+            navigate("/dashboard");
+          } else {
+            console.log("Unauthorized — signing out");
+            await signOut();
+          }
+        } else {
+          console.log("No token found — signing out");
+          await signOut();
+        }
+      } catch (err) {
+        console.error("Session check failed:", err);
+        await signOut();
+      }
+    };
+
+    checkSessionAndRedirect();
+  }, []);
 
   const formik = useFormik({
     initialValues,
     validationSchema: signInValidation,
     onSubmit: async (values, { setSubmitting }) => {
-      if (!clerkLoaded || !signIn) {
-        setError("Authentication service is not available");
-        setSubmitting(false);
-        return;
-      }
-
       setIsLoading(true);
-      setError("");
-
       try {
-        // Start the sign-in process with Clerk
-        const result = await signIn.create({
-          identifier: values.emailOrPhone,
-          password: values.password,
-        });
+        if (signIn) {
+          const result = await signIn.create({
+            identifier: values.emailOrPhone,
+            password: values.password,
+          });
 
-        if (result.status === "complete") {
-          navigate("/dashboard");
+          if (result.status === "complete") {
+            const { data } = await axios.get(
+              `${import.meta.env.VITE_BASE_URL}/admin/checkrole?check=${true}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${result.createdSessionId}`,
+                },
+              }
+            );
+
+            if (data.success && ["admin", "superadmin"].includes(data.role)) {
+              navigate("/dashboard");
+            } else {
+              toast.error("You are not authorized to access the dashboard.");
+              signOut();
+            }
+          } else {
+            setError("Authentication failed.");
+          }
+        } else {
+          setError("Sign-in service not loaded.");
         }
       } catch (err) {
         console.error("Sign-in error:", err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to sign in. Please try again."
-        );
+        setError("Failed to sign in. Please try again.");
       } finally {
         setIsLoading(false);
         setSubmitting(false);
