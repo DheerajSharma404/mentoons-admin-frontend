@@ -6,15 +6,18 @@ import {
   AddProducts,
   AllJobs,
   AllottedCalls,
+  ApplicationDetails,
   AssesmentForm,
   AssesmentReports,
   CallRequest,
   CreateJob,
   Dashboard,
   DashboardAnalytics,
+  GeneralQueries,
   GetWorkshopEnquiries,
   JobDetails,
   LogIn,
+  Newsletter,
   ProductTable,
   Register,
   TaskDetails,
@@ -29,8 +32,6 @@ import {
   ViewUser,
   Welcome,
 } from "./pages/index";
-import AddSKU from "./pages/productsModule/AddSKU";
-import AllSku from "./pages/productsModule/AllSku";
 import TaskStatistics from "./pages/TasksStaistics";
 import ProtectedRoutes from "./utils/ProtectedRoutes";
 const routes = [
@@ -123,28 +124,6 @@ const routes = [
     exact: true,
   },
   {
-    path: "/add-sku",
-    component: (
-      <MainLayout>
-        <ProtectedRoutes>
-          <AddSKU />
-        </ProtectedRoutes>
-      </MainLayout>
-    ),
-    exact: true,
-  },
-  {
-    path: "/all-sku",
-    component: (
-      <MainLayout>
-        <ProtectedRoutes>
-          <AllSku />
-        </ProtectedRoutes>
-      </MainLayout>
-    ),
-    exact: true,
-  },
-  {
     path: "/product-table",
     component: (
       <MainLayout>
@@ -194,6 +173,17 @@ const routes = [
       <MainLayout>
         <ProtectedRoutes>
           <ViewApplications />
+        </ProtectedRoutes>
+      </MainLayout>
+    ),
+    exact: true,
+  },
+  {
+    path: "/view-applications/:applicationId",
+    component: (
+      <MainLayout>
+        <ProtectedRoutes>
+          <ApplicationDetails />
         </ProtectedRoutes>
       </MainLayout>
     ),
@@ -284,6 +274,24 @@ const routes = [
     component: (
       <MainLayout>
         <AssesmentReports />
+      </MainLayout>
+    ),
+    exact: true,
+  },
+  {
+    path: "/general-queries",
+    component: (
+      <MainLayout>
+        <GeneralQueries />
+      </MainLayout>
+    ),
+    exact: true,
+  },
+  {
+    path: "/newsletter",
+    component: (
+      <MainLayout>
+        <Newsletter />
       </MainLayout>
     ),
     exact: true,

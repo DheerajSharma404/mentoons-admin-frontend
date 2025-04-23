@@ -1,34 +1,33 @@
 import React from "react";
-import { useGetDashboardDataQuery } from "../features/dashboard/dashboardApi";
+import { FaBox, FaBriefcase, FaFileAlt, FaUsers } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import {
-  AreaChart,
   Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
-import { FaUsers, FaBriefcase, FaFileAlt, FaBox } from "react-icons/fa";
-import StatCard from "../components/common/StatsCard";
-import { useNavigate } from "react-router-dom";
 import Loader from "../components/common/Loader";
+import StatCard from "../components/common/StatsCard";
+import { useGetDashboardDataQuery } from "../features/dashboard/dashboardApi";
 
 const DashboardAnalytics: React.FC = () => {
   const navigate = useNavigate();
   const { data, isLoading } = useGetDashboardDataQuery();
-  console.log("dashboard analystic data :", data);
 
   if (isLoading) {
     return <Loader />;
   }
   return (
     <div className="h-full p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-800 mb-10">
+      <div className="mx-auto max-w-7xl">
+        <h1 className="mb-10 text-4xl font-bold text-gray-800">
           Dashboard Analytics
         </h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+        <div className="grid grid-cols-1 gap-8 mb-10 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Users"
             value={data?.data.totalUsers || 0}
@@ -62,11 +61,11 @@ const DashboardAnalytics: React.FC = () => {
             }}
           />
         </div>
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+        <div className="p-6 bg-white shadow-lg rounded-2xl">
+          <h2 className="mb-6 text-2xl font-semibold text-gray-800">
             Sales Data
           </h2>
-          <div className="h-96 w-full">
+          <div className="w-full h-96">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={data?.data?.completedOrdersInMonthOrder}

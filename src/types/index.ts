@@ -76,7 +76,7 @@ export interface Product {
 }
 
 export interface JobApplication {
-  id: number;
+  _id: string;
   name: string;
   email: string;
   phone: string;
@@ -145,7 +145,8 @@ export interface DashboardDataResponse {
     totalProducts: number;
     salesData: {
       month: string;
-      sales: number;
+      totalAmount: number;
+      orderCount: number;
     }[];
   };
 }
@@ -160,6 +161,11 @@ export interface WorkshopEnquiry {
   city: string;
   duration: string;
   workshop: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  phone: string;
+  message: string;
 }
 
 export interface WorkshopEnquiriesListResponse {

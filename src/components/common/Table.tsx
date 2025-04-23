@@ -1,13 +1,13 @@
+import { useState } from "react";
 import {
   FaEdit,
   FaEye,
-  FaTrash,
   FaSort,
-  FaSortUp,
   FaSortDown,
+  FaSortUp,
+  FaTrash,
 } from "react-icons/fa";
 import { ITable } from "../../types";
-import { useState } from "react";
 
 interface DynamicTableProps extends ITable {
   onEdit: (row: any) => void | undefined;
@@ -64,9 +64,9 @@ const DynamicTable = ({
     ) {
       return (
         <img
-          src={value}
+          src={value || ""}
           alt="Product Thumbnail"
-          className="w-8 h-8 md:w-10 md:h-10 object-contain"
+          className="object-contain w-8 h-8 md:w-10 md:h-10"
         />
       );
     } else if (key === "productSample" || key === "productFile") {
@@ -75,7 +75,7 @@ const DynamicTable = ({
           href={value}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 hover:underline text-xs md:text-sm"
+          className="text-xs text-blue-600 hover:underline md:text-sm"
         >
           {truncateText(value, window.innerWidth < 640 ? 10 : 20)}
         </a>
@@ -115,23 +115,23 @@ const DynamicTable = ({
 
   return (
     <div className="w-full">
-      <div className="mb-4 px-2">
+      <div className="px-2 mb-4">
         <input
           type="text"
           placeholder="Search..."
           value={searchTerm}
           onChange={(e) => handleSearch(e)}
-          className="p-2 border rounded w-full text-sm md:text-base"
+          className="w-full p-2 text-sm border rounded md:text-base"
         />
       </div>
-      <div className="overflow-x-auto shadow rounded-lg">
+      <div className="overflow-x-auto rounded-lg shadow">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               {visibleColumns.map((key, index) => (
                 <th
                   key={index}
-                  className="px-2 py-2 md:px-4 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-2 py-2 text-xs font-medium tracking-wider text-left text-gray-500 uppercase cursor-pointer md:px-4 md:py-3"
                   onClick={() => onSort(key)}
                 >
                   <div className="flex items-center gap-1">
@@ -141,7 +141,7 @@ const DynamicTable = ({
                   </div>
                 </th>
               ))}
-              <th className="px-2 py-2 md:px-4 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-2 py-2 text-xs font-medium tracking-wider text-left text-gray-500 uppercase md:px-4 md:py-3">
                 <span className="hidden sm:inline">Actions</span>
                 <span className="sm:hidden">Act</span>
               </th>
@@ -155,27 +155,27 @@ const DynamicTable = ({
                   .map((key: string, colIndex: number) => (
                     <td
                       key={colIndex}
-                      className="px-2 py-2 md:px-4 md:py-3 whitespace-nowrap text-xs md:text-sm"
+                      className="px-2 py-2 text-xs md:px-4 md:py-3 whitespace-nowrap md:text-sm"
                     >
                       {renderProductContent(key, row[key])}
                     </td>
                   ))}
-                <td className="px-2 py-2 md:px-4 md:py-3 whitespace-nowrap relative">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
+                <td className="relative px-2 py-2 md:px-4 md:py-3 whitespace-nowrap">
+                  <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
                     {/* Mobile action menu */}
                     <div className="sm:hidden">
                       <button
                         onClick={() => toggleActionMenu(rowIndex)}
-                        className="text-gray-500 hover:text-gray-700 p-1 rounded-full"
+                        className="p-1 text-gray-500 rounded-full hover:text-gray-700"
                       >
                         •••
                       </button>
                       {showActions === rowIndex && (
-                        <div className="absolute right-0 z-10 mt-1 bg-white shadow-lg rounded border p-2 flex flex-col gap-2">
+                        <div className="absolute right-0 z-10 flex flex-col gap-2 p-2 mt-1 bg-white border rounded shadow-lg">
                           {onView && (
                             <button
                               onClick={() => onView(row)}
-                              className="text-blue-600 hover:text-blue-900 flex items-center text-xs"
+                              className="flex items-center text-xs text-blue-600 hover:text-blue-900"
                             >
                               <FaEye className="mr-1" /> View
                             </button>
@@ -183,7 +183,7 @@ const DynamicTable = ({
                           {onEdit && (
                             <button
                               onClick={() => onEdit(row)}
-                              className="text-yellow-600 hover:text-yellow-900 flex items-center text-xs"
+                              className="flex items-center text-xs text-yellow-600 hover:text-yellow-900"
                             >
                               <FaEdit className="mr-1" /> Edit
                             </button>
@@ -191,7 +191,7 @@ const DynamicTable = ({
                           {onDelete && (
                             <button
                               onClick={() => onDelete(row)}
-                              className="text-red-600 hover:text-red-900 flex items-center text-xs"
+                              className="flex items-center text-xs text-red-600 hover:text-red-900"
                             >
                               <FaTrash className="mr-1" /> Delete
                             </button>
@@ -201,11 +201,11 @@ const DynamicTable = ({
                     </div>
 
                     {/* Desktop action buttons */}
-                    <div className="hidden sm:flex items-center gap-2">
+                    <div className="items-center hidden gap-2 sm:flex">
                       {onView && (
                         <button
                           onClick={() => onView(row)}
-                          className="text-blue-600 hover:text-blue-900 flex items-center text-xs md:text-sm"
+                          className="flex items-center text-xs text-blue-600 hover:text-blue-900 md:text-sm"
                         >
                           <FaEye className="mr-1" />{" "}
                           <span className="hidden md:inline">View</span>
@@ -214,7 +214,7 @@ const DynamicTable = ({
                       {onEdit && (
                         <button
                           onClick={() => onEdit(row)}
-                          className="text-yellow-600 hover:text-yellow-900 flex items-center text-xs md:text-sm"
+                          className="flex items-center text-xs text-yellow-600 hover:text-yellow-900 md:text-sm"
                         >
                           <FaEdit className="mr-1" />{" "}
                           <span className="hidden md:inline">Edit</span>
@@ -223,7 +223,7 @@ const DynamicTable = ({
                       {onDelete && (
                         <button
                           onClick={() => onDelete(row)}
-                          className="text-red-600 hover:text-red-900 flex items-center text-xs md:text-sm"
+                          className="flex items-center text-xs text-red-600 hover:text-red-900 md:text-sm"
                         >
                           <FaTrash className="mr-1" />{" "}
                           <span className="hidden md:inline">Delete</span>
@@ -239,7 +239,7 @@ const DynamicTable = ({
         {/* Show note about hidden columns on small screens */}
         {window.innerWidth < 768 &&
           columnKeys.length > visibleColumns.length && (
-            <div className="text-xs text-gray-500 p-2 text-center">
+            <div className="p-2 text-xs text-center text-gray-500">
               Some columns are hidden on small screens. Rotate device or use a
               larger screen to view all data.
             </div>
