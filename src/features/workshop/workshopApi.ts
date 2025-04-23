@@ -7,7 +7,8 @@ import {
   WorkshopEnquiriesListResponse,
 } from "../../types";
 
-const baseUrl = "http://localhost:4000/api/v1";
+// const baseUrl = "http://localhost:4000/api/v1";
+ const baseUrl = "https://mentoons-backend-zlx3.onrender.com/api/v1"
 
 export const workshopApiSlice = createApi({
   reducerPath: "workshopApi",

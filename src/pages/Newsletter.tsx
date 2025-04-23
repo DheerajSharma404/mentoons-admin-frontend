@@ -7,9 +7,11 @@ import Pagination from "../components/common/Pagination";
 interface SubscriberData {
   _id: string;
   email: string;
-  subscriptionDate: string;
-  status: "active" | "inactive" | "pending";
-  name?: string;
+  name: string;
+  status: "active" | "inactive" | "Unsubscribed";
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }
 
 // Custom debounce hook
@@ -47,7 +49,8 @@ const Newsletter = () => {
       setLoading(true);
       // Replace with your actual API endpoint
       const response = await axios.get(
-        `http://localhost:4000/api/v1/newsletter/subscribers`,
+        // `http://localhost:4000/api/v1/email/newsletter-subscribers`,
+        `https://mentoons-backend-zlx3.onrender.com/api/v1/email/newsletter-subscribers`,
         {
           params: {
             page: currentPage,
@@ -57,15 +60,13 @@ const Newsletter = () => {
           },
         }
       );
-
-      setSubscribers(response.data.data.subscribers || []);
+      console.log("response", response.data);
+      setSubscribers(response.data.data.data || []);
       setTotalPages(response.data.data.totalPages || 1);
       setError(null);
     } catch (err) {
       console.error("Error fetching subscribers:", err);
       setError("Failed to load newsletter subscribers");
-      // For demo purposes, create mock data if API fails
-      createMockData();
     } finally {
       setLoading(false);
     }
@@ -74,51 +75,6 @@ const Newsletter = () => {
   useEffect(() => {
     fetchSubscribers();
   }, [fetchSubscribers]);
-
-  const createMockData = () => {
-    // Create a larger pool of mock data
-    const allMockSubscribers: SubscriberData[] = Array.from(
-      { length: 50 },
-      (_, i) => ({
-        _id: `id-${i + 1}`,
-        email: `subscriber${i + 1}@example.com`,
-        name: i % 3 === 0 ? `User ${i + 1}` : undefined,
-        subscriptionDate: new Date(
-          Date.now() - Math.floor(Math.random() * 10000000000)
-        ).toISOString(),
-        status: i % 5 === 0 ? "inactive" : i % 7 === 0 ? "pending" : "active",
-      })
-    );
-
-    // Filter based on active filter
-    let filteredSubscribers = allMockSubscribers;
-    if (activeFilter !== "all") {
-      filteredSubscribers = allMockSubscribers.filter(
-        (sub) => sub.status === activeFilter
-      );
-    }
-
-    // Filter based on search term if present
-    if (debouncedSearchTerm) {
-      const term = debouncedSearchTerm.toLowerCase();
-      filteredSubscribers = filteredSubscribers.filter(
-        (sub) =>
-          sub.email.toLowerCase().includes(term) ||
-          (sub.name && sub.name.toLowerCase().includes(term))
-      );
-    }
-
-    // Paginate the results
-    const startIndex = (currentPage - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedSubscribers = filteredSubscribers.slice(
-      startIndex,
-      endIndex
-    );
-
-    setSubscribers(paginatedSubscribers);
-    setTotalPages(Math.ceil(filteredSubscribers.length / limit));
-  };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -155,7 +111,7 @@ const Newsletter = () => {
         return "bg-green-100 text-green-800 border-green-200";
       case "inactive":
         return "bg-red-100 text-red-800 border-red-200";
-      case "pending":
+      case "Unsubscribed":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
@@ -189,7 +145,7 @@ const Newsletter = () => {
                 <FaFilter className="mr-2 text-blue-500" /> Filter:
               </span>
               <div className="flex flex-wrap gap-2">
-                {["all", "active", "inactive", "pending"].map((filter) => (
+                {["all", "active", "inactive", "Unsubscribed"].map((filter) => (
                   <button
                     key={filter}
                     onClick={() => handleFilterChange(filter)}
@@ -274,7 +230,7 @@ const Newsletter = () => {
                         <div className="flex items-center">
                           <FaCalendarAlt className="mr-2 text-gray-400" />
                           <span className="text-sm text-gray-900">
-                            {formatDate(subscriber.subscriptionDate)}
+                            {formatDate(subscriber.createdAt)}
                           </span>
                         </div>
                       </td>

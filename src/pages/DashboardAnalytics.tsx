@@ -15,7 +15,7 @@ import StatCard from "../components/common/StatsCard";
 import { useGetDashboardDataQuery } from "../features/dashboard/dashboardApi";
 
 const DashboardAnalytics: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
   const { data, isLoading } = useGetDashboardDataQuery();
 
   if (isLoading) {
