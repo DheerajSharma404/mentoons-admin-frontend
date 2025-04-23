@@ -16,5 +16,13 @@ export enum ProductType {
   MENTOONS_BOOKS = "mentoons books",
 }
 
+export enum CardType {
+  CONVERSATION_STARTER_CARDS = "conversation starter cards",
+  SILENT_STORIES = "silent stories",
+  STORY_RE_TELLER_CARD = "story re-teller card",
+  CONVERSATION_STORY_CARDS = "conversation story cards",
+}
+
 export type AgeCategoryType = keyof typeof AgeCategory;
 export type ProductTypeType = keyof typeof ProductType;
+export type CardTypeType = keyof typeof CardType;

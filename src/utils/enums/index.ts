@@ -3,6 +3,15 @@ import {
   AgeCategory,
   AgeCategoryType,
   ProductTypeType,
+  CardType,
+  CardTypeType,
 } from "./enums";
 
-export { ProductType, AgeCategory, type AgeCategoryType, type ProductTypeType };
+export {
+  ProductType,
+  AgeCategory,
+  CardType,
+  type AgeCategoryType,
+  type ProductTypeType,
+  type CardTypeType,
+};

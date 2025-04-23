@@ -8,6 +8,7 @@ import Loader from "../../components/common/Loader";
 
 const ViewApplications = () => {
   const [sortOrder, setSortOrder] = useState<1 | -1>(-1);
+  const [sortField, setSortField] = useState<string>("name");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -19,8 +20,7 @@ const ViewApplications = () => {
     page: Number(currentPage),
     limit,
   });
-  console.log("data recieved from backend: ", data);
-  console.log(data?.data?.jobs);
+
   const handleEdit = (application: JobApplication) => {
     console.log("Edit application:", application);
   };
@@ -33,8 +33,13 @@ const ViewApplications = () => {
     console.log("View application:", application);
   };
 
-  const handleSort = () => {
-    setSortOrder((prevOrder) => (prevOrder === 1 ? -1 : 1));
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder((prevOrder) => (prevOrder === 1 ? -1 : 1));
+    } else {
+      setSortField(field);
+      setSortOrder(-1);
+    }
   };
 
   const debouncedSearch = useCallback(
@@ -73,29 +78,33 @@ const ViewApplications = () => {
   const { jobs = [], totalPages, totalJobs } = data?.data;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">View All Job Applications</h1>
-      <DynamicTable
-        headings={[
-          "Name",
-          "Email",
-          "Phone",
-          "Gender",
-          "Portfolio Link",
-          "Cover Note",
-          "Resume Link",
-          "Cover Letter Link",
-        ]}
-        data={jobs}
-        sortField="Name"
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onView={handleView}
-        onSort={handleSort}
-        sortOrder={sortOrder.toString()}
-        searchTerm={searchTerm}
-        handleSearch={handleSearch}
-      />
+    <div className="w-full max-w-full">
+      <h1 className="text-2xl font-bold mb-6">View All Job Applications</h1>
+
+      <div className="overflow-hidden">
+        <DynamicTable
+          headings={[
+            "Name",
+            "Email",
+            "Phone",
+            "Gender",
+            "Portfolio Link",
+            "Cover Note",
+            "Resume Link",
+            "Cover Letter Link",
+          ]}
+          data={jobs}
+          sortField={sortField}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onView={handleView}
+          onSort={handleSort}
+          sortOrder={sortOrder === 1 ? "asc" : "desc"}
+          searchTerm={searchTerm}
+          handleSearch={handleSearch}
+        />
+      </div>
+
       <div className="mt-4">
         <Pagination
           currentPage={currentPage}
