@@ -1,28 +1,33 @@
+import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Product } from "../../types";
 import { FaArrowLeft } from "react-icons/fa";
-import { errorToast } from "../../utils/toastResposnse";
+import { useNavigate, useParams } from "react-router-dom";
 import Loader from "../../components/common/Loader";
+import {
+  AudioComicProduct,
+  ComicProduct,
+  PodcastProduct,
+  ProductBase,
+  ProductType,
+} from "../../types/productType";
+import { errorToast } from "../../utils/toastResposnse";
 const ViewProduct: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductBase | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_BASE_URL}/products/${productId}`
+        const response = await axios.get(
+          `https://mentoons-backend-zlx3.onrender.com/api/v1/products/${productId}`
         );
-        console.log("response got :", response);
-        if (!response.ok) {
+        if (!response.data) {
           throw new Error("Failed to fetch product");
         }
-        const data = await response.json();
-        console.log(data);
-        setProduct(data);
+
+        setProduct(response.data);
       } catch (error) {
         console.error("Error fetching product:", error);
         errorToast("Failed to load product details");
@@ -41,10 +46,10 @@ const ViewProduct: React.FC = () => {
   if (!product) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
-        <h2 className="text-2xl font-bold mb-4">Product not found</h2>
+        <h2 className="mb-4 text-2xl font-bold">Product not found</h2>
         <button
           onClick={() => navigate("/product-table")}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105"
+          className="px-4 py-2 font-bold text-white transition duration-300 ease-in-out transform bg-blue-500 rounded hover:bg-blue-700 hover:scale-105"
         >
           Back to Products
         </button>
@@ -55,7 +60,7 @@ const ViewProduct: React.FC = () => {
   const renderFilePreview = (file: string, type: "sample" | "file") => {
     const fileExtension = file.split(".").pop()?.toLowerCase();
 
-    if (["mp3", "wav", "ogg"].includes(fileExtension || "")) {
+    if (["mp3", "wav", "ogg", "mp4", "pdf"].includes(fileExtension || "")) {
       return (
         <audio controls className="w-full mt-2">
           <source src={file} type={`audio/${fileExtension}`} />
@@ -79,7 +84,7 @@ const ViewProduct: React.FC = () => {
           href={file}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-500 hover:text-blue-700 mt-2 inline-block"
+          className="inline-block mt-2 text-blue-500 hover:text-blue-700"
         >
           View {type === "sample" ? "Sample" : "File"}
         </a>
@@ -88,32 +93,32 @@ const ViewProduct: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container px-4 py-8 mx-auto">
       <button
         onClick={() => navigate("/product-table")}
-        className="mb-6 flex items-center text-blue-500 hover:text-blue-700 transition duration-300 ease-in-out"
+        className="flex items-center mb-6 text-blue-500 transition duration-300 ease-in-out hover:text-blue-700"
       >
-        <FaArrowLeft className="h-5 w-5 mr-2" />
+        <FaArrowLeft className="w-5 h-5 mr-2" />
         Back to Products
       </button>
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+      <div className="overflow-hidden bg-white rounded-lg shadow-lg">
         <div className="md:flex">
           <div className="md:flex-shrink-0">
-            {product?.productImages ? (
+            {product?.productImages.length > 0 ? (
               <img
-                className="h-48 w-full object-cover md:w-48"
-                src={product.productImages[0]?.imageUrl}
+                className="object-cover w-full h-48 md:w-48"
+                src={product.productImages[0].imageUrl}
                 alt={product.title}
               />
             ) : (
-              <div className="h-48 w-full md:w-48 bg-gray-200 flex items-center justify-center">
+              <div className="flex items-center justify-center w-full h-48 bg-gray-200 md:w-48">
                 <span className="text-gray-500">No image</span>
               </div>
             )}
           </div>
           <div className="p-8">
-            <div className="uppercase tracking-wide text-sm text-indigo-500 font-semibold">
-              {product?.ageCategory}
+            <div className="text-sm font-semibold tracking-wide text-indigo-500 uppercase">
+              {product?.type}
             </div>
             <h1 className="mt-1 text-3xl font-bold text-gray-900">
               Product Title: {product?.title}
@@ -121,33 +126,26 @@ const ViewProduct: React.FC = () => {
             <p className="mt-2 text-gray-600">
               Product Description: {product?.description}
             </p>
-            <div className="mt-2 flex items-center px-4 py-2 hover:bg-gray-200 cursor-pointer">
-              Author:{" "}
-              {product?.author && product.author.length > 0 ? (
-                <>
-                  <span>
-                    {product.details.host
-                      ? product.details.host
-                      : "narrator" in product.details
-                      ? product.details.narrator
-                      : "author" in product.details
-                      ? product.details.author
-                      : ""}
-                  </span>
-                </>
-              ) : (
-                "Unknown"
-              )}
+
+            <div className="mt-4">
+              <h2 className="mb-2 text-xl font-semibold">Product Sample</h2>
+              {product?.details &&
+                (product.type === ProductType.WORKSHOP
+                  ? null
+                  : renderFilePreview(
+                      (
+                        product?.details as
+                          | ComicProduct["details"]
+                          | AudioComicProduct["details"]
+                          | PodcastProduct["details"]
+                      )?.sampleUrl || " ",
+                      "sample"
+                    ))}
             </div>
             <div className="mt-4">
-              <h2 className="text-xl font-semibold mb-2">Product Sample</h2>
-              {product?.details.sampleUrl &&
-                renderFilePreview(product.details.sampleUrl, "sample")}
-            </div>
-            <div className="mt-4">
-              <h2 className="text-xl font-semibold mb-2">Product File</h2>
+              <h2 className="mb-2 text-xl font-semibold">Product File</h2>
               {product?.orignalProductSrc &&
-                renderFilePreview(product.orignalProductSrc, "file")}
+                renderFilePreview(product?.orignalProductSrc, "file")}
             </div>
           </div>
         </div>

@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect } from "react";
+import debounce from "lodash/debounce";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Loader from "../../components/common/Loader";
+import Pagination from "../../components/common/Pagination";
 import DynamicTable from "../../components/common/Table";
 import { useAppliedJobQuery } from "../../features/career/careerApi";
 import { JobApplication } from "../../types";
-import debounce from "lodash/debounce";
-import Pagination from "../../components/common/Pagination";
-import Loader from "../../components/common/Loader";
 
 const ViewApplications = () => {
   const [sortOrder, setSortOrder] = useState<1 | -1>(-1);
@@ -13,14 +14,13 @@ const ViewApplications = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
-
+  const navigate = useNavigate();
   const { data, isLoading } = useAppliedJobQuery({
     sortOrder,
     searchTerm: debouncedSearchTerm,
     page: Number(currentPage),
     limit,
   });
-
   const handleEdit = (application: JobApplication) => {
     console.log("Edit application:", application);
   };
@@ -30,7 +30,7 @@ const ViewApplications = () => {
   };
 
   const handleView = (application: JobApplication) => {
-    console.log("View application:", application);
+    navigate(`/view-applications/${application?._id}`);
   };
 
   const handleSort = (field: string) => {
@@ -71,11 +71,11 @@ const ViewApplications = () => {
   if (isLoading) return <Loader />;
   if (!data || !data.data)
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center h-screen">
         No data available
       </div>
     );
-  const { jobs = [], totalPages, totalJobs } = data?.data;
+  const { jobs = [], totalPages, totalJobs } = data.data;
 
   return (
     <div className="w-full max-w-full">

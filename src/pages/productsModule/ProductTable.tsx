@@ -1,3 +1,5 @@
+import { useAuth } from "@clerk/clerk-react";
+import axios from "axios";
 import debounce from "lodash/debounce";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -7,8 +9,7 @@ import Loader from "../../components/common/Loader";
 import Pagination from "../../components/common/Pagination";
 import DynamicTable from "../../components/common/Table";
 import { Product } from "../../types";
-import axios from "axios";
-
+import { errorToast, successToast } from "../../utils/toastResposnse";
 const ProductTable = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
@@ -22,6 +23,7 @@ const ProductTable = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalProducts, setTotalProducts] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { getToken } = useAuth();
 
   const editProduct = (row: Product) => {
     navigate(`/add-products`, { state: { product: row } });
@@ -35,23 +37,20 @@ const ProductTable = () => {
   const confirmDelete = async () => {
     if (productToDelete) {
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_BASE_URL}/products/${productToDelete._id}`,
-          {
-            method: "DELETE",
-          }
+        const response = await axios.delete(
+          `https://mentoons-backend-zlx3.onrender.com/api/v1/products/${productToDelete._id}`
         );
 
-        if (response.ok) {
+        if (response.status === 200) {
           setProducts((prevProducts) =>
             prevProducts.filter(
               (product) => product._id !== productToDelete._id
             )
           );
           console.log(response, "response");
-          toast.success("Product deleted successfully");
+          successToast("Product deleted successfully");
         } else {
-          const errorData = await response.json();
+          const errorData = response.data;
           throw new Error(
             `Failed to delete product: ${
               errorData.message || response.statusText
@@ -60,7 +59,7 @@ const ProductTable = () => {
         }
       } catch (error) {
         console.error("Error deleting product:", error);
-        toast.error(
+        errorToast(
           error instanceof Error ? error.message : "Failed to delete product"
         );
       }
@@ -101,69 +100,38 @@ const ProductTable = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setIsLoading(true);
       try {
+        setIsLoading(true);
+        const token = await getToken();
         const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/products`,
+          `https://mentoons-backend-zlx3.onrender.com/api/v1/products?search=${debouncedSearchTerm}&sortBy=createdAt&order=${sortOrder}&page=${currentPage}&limit=${limit}`,
           {
-            params: {
-              limit,
-              page: currentPage,
-              sort: sortOrder,
-              search: debouncedSearchTerm,
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${token}`,
             },
           }
         );
+        console.log(response, "response");
+        setProducts(response.data.data);
+        setTotalPages(response.data.totalPages);
+        setTotalProducts(response.data.total);
 
-        const result = response.data;
-        console.log(result.data, "osoo");
-
-        if (Array.isArray(result.data) && result.data.length > 0) {
-          const productDetails = result.data.map((p: Product) => {
-            const authorOrNarrator = p.details.host
-              ? p.details.host
-              : "narrator" in p.details
-              ? p.details.narrator
-              : "author" in p.details
-              ? p.details.author
-              : "";
-            return {
-              _id: p._id,
-              title: p.title,
-              description: p.description,
-              ageCategory: p.ageCategory,
-              productThumbnail: p.productImages[0]?.imageUrl,
-              productFile: p.orignalProductSrc,
-              author: authorOrNarrator,
-            };
-          });
-          setProducts(productDetails);
-          setTotalPages(result.data.totalPages);
-          setTotalProducts(result.data.length);
-        } else {
-          toast.error("Fetched data is not in the expected format");
-          console.error("Fetched data is not in the expected format:", result);
-          setProducts([]);
-        }
+        setIsLoading(false);
       } catch (error) {
         toast.error("Error fetching products");
         console.error("Error fetching products:", error);
-        setProducts([]);
-      } finally {
-        setIsLoading(false);
+        toast.error("Failed to fetch products");
       }
     };
 
     fetchProducts();
-  }, [limit, currentPage, sortOrder, debouncedSearchTerm]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearchTerm]);
+  }, [currentPage, limit, debouncedSearchTerm, getToken, sortOrder]);
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-6">Products</h1>
+      <h1 className="mb-6 text-2xl font-bold">All Products</h1>
       {isLoading ? (
         <Loader />
       ) : (

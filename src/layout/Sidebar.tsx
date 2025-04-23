@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import {
   FaBox,
   FaBriefcase,
-  FaChalkboardTeacher,
   FaUsers,
   FaChevronRight,
+  FaChalkboardTeacher,
 } from "react-icons/fa";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
@@ -110,8 +110,6 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
           items={[
             { href: "/product-table", label: "All Products" },
             { href: "/add-products", label: "Add Product" },
-            { href: "/add-sku", label: "Add SKU" },
-            { href: "/all-sku", label: "All SKU" },
           ]}
           isCollapsed={isCollapsed}
           isExpanded={expandedSection === "Products"}

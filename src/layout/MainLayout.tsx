@@ -51,7 +51,9 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             )}
           </div>
         </main>
-        <Footer />
+        <div className="fixed bottom-0 right-0 left-[15rem]">
+          <Footer />
+        </div>
       </div>
     </div>
   );

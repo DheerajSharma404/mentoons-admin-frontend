@@ -1,15 +1,16 @@
+import { useState } from "react";
 import {
   FaEdit,
   FaEye,
-  FaTrash,
   FaSort,
-  FaSortUp,
   FaSortDown,
   FaChevronDown,
   FaChevronUp,
   FaFilter,
+  FaSortUp,
+  FaTrash,
 } from "react-icons/fa";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import { ChangeEvent } from "react";
 
 interface DynamicTableProps {
@@ -48,17 +49,15 @@ const DynamicTable = ({
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [screenSize, setScreenSize] = useState<string>("md");
 
-  // Ensure we have valid data
   const tableData = useMemo(() => (Array.isArray(data) ? data : []), [data]);
 
-  // Get column keys from data or use provided headings
   const columnKeys = useMemo(() => {
     if (tableData.length > 0) {
       return Object.keys(tableData[0]).filter(
         (key) => !Array.isArray(tableData[0][key]) && key !== "_id"
       );
     }
-    // If no data but headings provided, use lowercase headings as keys
+    
     if (headings && headings.length > 0) {
       return headings.map((heading) =>
         heading.toLowerCase().replace(/\s+/g, "")
