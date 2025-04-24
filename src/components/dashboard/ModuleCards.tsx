@@ -31,23 +31,24 @@ const ModuleCards = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-6 p-6 rounded-lg sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 p-4 md:p-6 bg-white rounded-lg">
       {modules.map((module, index) => (
         <motion.div
           key={index}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate(module.link)}
-          className="flex flex-col items-center p-6 transition-all duration-300 bg-white shadow-lg cursor-pointer rounded-xl hover:shadow-xl"
+          className="flex flex-col items-center p-4 md:p-6 transition-all duration-300 bg-white shadow-md hover:shadow-xl cursor-pointer rounded-xl"
         >
-          <div className="flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-gradient-to-br from-blue-400 to-purple-500">
+          <div className="flex items-center justify-center w-16 h-16 md:w-20 md:h-20 mb-4 rounded-full bg-gradient-to-br from-blue-400 to-purple-500">
             <img
               src={module.image}
               alt={module.name}
-              className="w-12 h-12 text-white"
+              className="w-10 h-10 md:w-12 md:h-12 text-white"
+              loading="lazy"
             />
           </div>
-          <h2 className="mb-2 text-xl font-bold text-gray-800">
+          <h2 className="mb-2 text-lg md:text-xl font-bold text-gray-800 text-center">
             {module.name}
           </h2>
           <p className="text-sm text-center text-gray-600">

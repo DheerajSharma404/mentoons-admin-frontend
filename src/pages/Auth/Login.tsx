@@ -1,5 +1,4 @@
-// import { SignIn } from "@clerk/clerk-react";
-import Signin from "../../components/dashboard/signIn";
+import { SignIn } from "@clerk/clerk-react";
 
 const LogIn = () => {
   return (
@@ -11,7 +10,9 @@ const LogIn = () => {
           className="w-32"
         />
         <h1 className="poppins font-medium text-xl sm:text-4xl">Admin Login</h1>
-        <Signin />
+        <div className="flex flex-1 justify-center items-center">
+          <SignIn signUpUrl="/sign-up" forceRedirectUrl="/dashboard" />
+        </div>
       </div>
     </section>
   );
