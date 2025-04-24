@@ -34,7 +34,7 @@ const ApplicationDetails = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `http://localhost:4000/api/v1/career/applied/${applicationId}`
+          `https://mentoons-backend-zlx3.onrender.com/api/v1/career/applied/${applicationId}`
         );
         setApplication(response.data.data);
         setError(null);

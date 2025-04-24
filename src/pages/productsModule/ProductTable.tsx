@@ -9,6 +9,7 @@ import Loader from "../../components/common/Loader";
 import Pagination from "../../components/common/Pagination";
 import DynamicTable from "../../components/common/Table";
 import { Product } from "../../types";
+import { ProductBase } from "../../types/productType";
 import { errorToast, successToast } from "../../utils/toastResposnse";
 
 const ProductTable = () => {
@@ -26,7 +27,7 @@ const ProductTable = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { getToken } = useAuth();
 
-  const editProduct = (row: Product) => {
+  const editProduct = (row: ProductBase) => {
     navigate(`/add-products`, { state: { product: row } });
   };
 
