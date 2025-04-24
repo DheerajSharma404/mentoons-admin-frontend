@@ -34,7 +34,9 @@ const GeneralQueries = () => {
     const fetchQueries = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:4000/api/v1/query");
+        const response = await axios.get(
+          "https://mentoons-backend-zlx3.onrender.com/api/v1/query"
+        );
         console.log(response.data);
         setQueries(response.data.data);
         setLoading(false);
@@ -65,7 +67,7 @@ const GeneralQueries = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:4000/api/v1/query/${selectedQuery._id}`,
+        `https://mentoons-backend-zlx3.onrender.com/api/v1/query/${selectedQuery._id}`,
         {
           status,
           responseMessage,
