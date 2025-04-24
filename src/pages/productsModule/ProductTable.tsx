@@ -10,6 +10,7 @@ import Pagination from "../../components/common/Pagination";
 import DynamicTable from "../../components/common/Table";
 import { Product } from "../../types";
 import { errorToast, successToast } from "../../utils/toastResposnse";
+
 const ProductTable = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
@@ -40,7 +41,6 @@ const ProductTable = () => {
         const response = await axios.delete(
           `https://mentoons-backend-zlx3.onrender.com/api/v1/products/${productToDelete._id}`
         );
-
         if (response.status === 200) {
           setProducts((prevProducts) =>
             prevProducts.filter(
@@ -113,11 +113,35 @@ const ProductTable = () => {
             },
           }
         );
-        console.log(response, "response");
-        setProducts(response.data.data);
+        console.log(response.data.data, "response");
+
+        const product = response.data.data.map((item: any) => {
+          const {
+            details,
+            __v,
+            productTypeOrder,
+            rating,
+            createdAt,
+            updatedAt,
+            ...rest
+          } = item;
+
+          const formattedCreatedAt = new Date(createdAt).toLocaleString();
+          const formattedUpdatedAt = new Date(updatedAt).toLocaleString();
+
+          console.log(details, __v, productTypeOrder, rating);
+
+          return {
+            ...rest,
+            createdAt: formattedCreatedAt,
+            updatedAt: formattedUpdatedAt,
+          };
+        });
+
+        console.log(product);
+        setProducts(product);
         setTotalPages(response.data.totalPages);
         setTotalProducts(response.data.total);
-
         setIsLoading(false);
       } catch (error) {
         toast.error("Error fetching products");
@@ -130,41 +154,43 @@ const ProductTable = () => {
   }, [currentPage, limit, debouncedSearchTerm, getToken, sortOrder]);
 
   return (
-    <div className="p-4">
-      <h1 className="mb-6 text-2xl font-bold">All Products</h1>
-      {isLoading ? (
-        <Loader />
-      ) : (
-        <>
-          <DynamicTable
-            data={products}
-            onEdit={editProduct}
-            onDelete={removeProduct}
-            onView={viewProduct}
-            sortField="createdAt"
-            onSort={handleSort}
-            sortOrder={sortOrder}
-            searchTerm={searchTerm}
-            handleSearch={handleSearch}
-          />
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={totalProducts}
-            limit={limit}
-            onLimitChange={handleLimitChange}
-            onPageChange={handlePageChange}
-          />
-        </>
-      )}
-      <DeleteConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={confirmDelete}
-        itemName={
-          productToDelete ? productToDelete.title || "this product" : ""
-        }
-      />
+    <div className="w-full max-w-full flex-1 overflow-x-hidden">
+      <div className="p-4 min-w-0">
+        <h1 className="mb-6 text-2xl font-bold">All Products</h1>
+        {isLoading ? (
+          <Loader />
+        ) : (
+          <div className="w-full overflow-x-auto">
+            <DynamicTable
+              data={products}
+              onEdit={editProduct}
+              onDelete={removeProduct}
+              onView={viewProduct}
+              sortField="createdAt"
+              onSort={handleSort}
+              sortOrder={sortOrder}
+              searchTerm={searchTerm}
+              handleSearch={handleSearch}
+            />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalProducts}
+              limit={limit}
+              onLimitChange={handleLimitChange}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={confirmDelete}
+          itemName={
+            productToDelete ? productToDelete.title || "this product" : ""
+          }
+        />
+      </div>
     </div>
   );
 };
