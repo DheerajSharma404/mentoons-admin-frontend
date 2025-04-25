@@ -1,6 +1,12 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { FaEnvelope, FaPhone, FaUser } from "react-icons/fa";
+import {
+  FaChevronDown,
+  FaEnvelope,
+  FaFilter,
+  FaPhone,
+  FaUser,
+} from "react-icons/fa";
 import { MdMessage, MdPendingActions } from "react-icons/md";
 
 interface Query {
@@ -8,7 +14,7 @@ interface Query {
   name: string;
   email: string;
   phone: string;
-  subject: string;
+  queryType: string;
   message: string;
   status: "pending" | "in-progress" | "resolved" | "closed";
   responseMessage?: string;
@@ -29,6 +35,7 @@ const GeneralQueries = () => {
   const [status, setStatus] = useState<
     "pending" | "in-progress" | "resolved" | "closed"
   >("pending");
+  const [originalQueries, setOriginalQueries] = useState<Query[]>([]);
 
   useEffect(() => {
     const fetchQueries = async () => {
@@ -39,6 +46,7 @@ const GeneralQueries = () => {
         );
         console.log(response.data);
         setQueries(response.data.data);
+        setOriginalQueries(response.data.data);
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch queries");
@@ -123,7 +131,52 @@ const GeneralQueries = () => {
       <h1 className="text-3xl font-bold text-gray-800 mb-8 border-b-2 border-[#ff9800] pb-2">
         All Queries
       </h1>
-
+      <div className="flex flex-col gap-3 mb-6 md:flex-row md:items-center">
+        <div className="flex items-center">
+          <FaFilter className="mr-2 text-[#ffb74d]" />
+          <label
+            htmlFor="queryTypeFilter"
+            className="text-lg font-semibold text-gray-800"
+          >
+            Filter Queries:
+          </label>
+        </div>
+        <div className="relative w-full md:w-64">
+          <select
+            id="queryTypeFilter"
+            className="w-full p-2 pl-4 pr-10 text-gray-700 bg-white border border-[#ffb74d] rounded-lg shadow-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#ffb74d] focus:border-transparent transition-all duration-300"
+            onChange={(e) => {
+              const filterValue = e.target.value;
+              console.log(filterValue);
+              if (filterValue === "all") {
+                // Reset to original queries from the API response
+                setQueries(originalQueries || []);
+              } else {
+                // Filter the original queries to maintain the complete dataset
+                setQueries(
+                  (originalQueries || []).filter(
+                    (query) => query.queryType === filterValue
+                  )
+                );
+              }
+            }}
+          >
+            <option value="all">All Queries</option>
+            {["general", "assessment", "product", "workshop"].map((item) => (
+              <option
+                key={item}
+                value={item}
+                className="text-gray-700 capitalize"
+              >
+                {item.charAt(0).toUpperCase() + item.slice(1)}
+              </option>
+            ))}
+          </select>
+          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+            <FaChevronDown className="text-[#ffb74d]" />
+          </div>
+        </div>
+      </div>
       {queries?.length === 0 ? (
         <div className="p-8 text-center text-gray-500">
           <p>No queries found</p>
@@ -138,8 +191,8 @@ const GeneralQueries = () => {
             >
               <div className="p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-xl font-semibold text-gray-800 truncate">
-                    {query.subject || "No Subject"}
+                  <h2 className="text-xl font-semibold text-gray-800 capitalize truncate">
+                    {query?.queryType || "No Subject"}
                   </h2>
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -178,7 +231,7 @@ const GeneralQueries = () => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-gray-800">
-                  {selectedQuery.subject || "No Subject"}
+                  {selectedQuery.queryType || "No Subject"}
                 </h2>
                 <button
                   onClick={closeModal}
