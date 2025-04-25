@@ -5,9 +5,12 @@ import {
   FaUsers,
   FaChevronRight,
   FaChalkboardTeacher,
+  FaQuestionCircle,
+  FaNewspaper,
 } from "react-icons/fa";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface SidebarProps {
   onToggle?: (collapsed: boolean) => void;
@@ -37,11 +40,33 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
   }, [onToggle]);
 
   useEffect(() => {
-    setExpandedSection(null);
+    const sections = [
+      { title: "Users", paths: ["/users", "/allotted-calls"] },
+      { title: "Products", paths: ["/product-table", "/add-products"] },
+      { title: "Workshops", paths: ["/workshop-enquiries"] },
+      {
+        title: "Career Corner",
+        paths: ["/all-jobs", "/hiring-form", "/view-applications"],
+      },
+      { title: "General Queries", paths: ["/general-queries"] },
+      { title: "Newsletter", paths: ["/newsletter"] },
+      {
+        title: "Employees",
+        paths: ["/employee-table", "/employee/add"],
+      },
+    ];
+
+    const activeSection = sections.find((section) =>
+      section.paths.some((path) => location.pathname === path)
+    );
+
+    if (activeSection) {
+      setExpandedSection(activeSection.title);
+    }
   }, [location.pathname]);
 
   const toggleSection = (title: string) => {
-    if (expandedSection === title) {
+    if (title === expandedSection) {
       setExpandedSection(null);
     } else {
       setExpandedSection(title);
@@ -49,13 +74,21 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
   };
 
   return (
-    <aside
+    <motion.aside
+      initial={{ width: isCollapsed ? 64 : 240 }}
+      animate={{ width: isCollapsed ? 64 : 240 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className={`bg-gray-100 shadow-xl rounded-r-3xl transition-all duration-300 ease-in-out h-screen relative flex flex-col
       ${isCollapsed ? "w-16" : "w-full"} 
       [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100`}
     >
-      <div className={`flex justify-center ${isCollapsed ? "py-2" : "py-4"}`}>
-        <img
+      <motion.div
+        className={`flex justify-center ${isCollapsed ? "py-2" : "py-4"}`}
+        whileHover={{ scale: 1.02 }}
+      >
+        <motion.img
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
           src="/assets/logo.png"
           alt="logo"
           className={`cursor-pointer transition-all duration-300 object-contain ${
@@ -66,11 +99,18 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
           data-tooltip-content="Go to Dashboard"
         />
         <Tooltip id="logo-tooltip" place="right" />
-      </div>
+      </motion.div>
 
       {!isCollapsed && (
-        <div className="mb-4 px-4">
-          <button
+        <motion.div
+          className="mb-4 px-4"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.button
+            whileHover={{ x: 5 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/dashboard-analytics")}
             className="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200"
           >
@@ -87,8 +127,8 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
               />
             </svg>
             Back to Dashboard
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
 
       <nav className="flex-grow overflow-y-auto px-2">
@@ -102,7 +142,6 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
           isCollapsed={isCollapsed}
           isExpanded={expandedSection === "Users"}
           toggleSection={() => toggleSection("Users")}
-          closeSection={() => setExpandedSection(null)}
         />
         <SidebarSection
           icon={<FaBox size={isCollapsed ? 20 : 16} />}
@@ -114,22 +153,14 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
           isCollapsed={isCollapsed}
           isExpanded={expandedSection === "Products"}
           toggleSection={() => toggleSection("Products")}
-          closeSection={() => setExpandedSection(null)}
         />
         <SidebarSection
           icon={<FaChalkboardTeacher size={isCollapsed ? 20 : 16} />}
           title="Workshops"
-          items={[
-            { href: "/active-workshops", label: "Active Workshops" },
-            { href: "/workshop-enquiries", label: "Enquiries" },
-            { href: "/assesment-form", label: "Assessment Form" },
-            { href: "/call-request", label: "Call Requests" },
-            { href: "/assesment-reports", label: "Assessment Reports" },
-          ]}
+          items={[{ href: "/workshop-enquiries", label: "Enquiries" }]}
           isCollapsed={isCollapsed}
           isExpanded={expandedSection === "Workshops"}
           toggleSection={() => toggleSection("Workshops")}
-          closeSection={() => setExpandedSection(null)}
         />
         <SidebarSection
           icon={<FaBriefcase size={isCollapsed ? 20 : 16} />}
@@ -142,12 +173,38 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
           isCollapsed={isCollapsed}
           isExpanded={expandedSection === "Career Corner"}
           toggleSection={() => toggleSection("Career Corner")}
-          closeSection={() => setExpandedSection(null)}
+        />
+        <SidebarSection
+          icon={<FaQuestionCircle size={isCollapsed ? 20 : 16} />}
+          title="General Queries"
+          items={[{ href: "/general-queries", label: "All Queries" }]}
+          isCollapsed={isCollapsed}
+          isExpanded={expandedSection === "General Queries"}
+          toggleSection={() => toggleSection("General Queries")}
+        />
+        <SidebarSection
+          icon={<FaNewspaper size={isCollapsed ? 20 : 16} />}
+          title="Newsletter"
+          items={[{ href: "/newsletter", label: "All Newsletter" }]}
+          isCollapsed={isCollapsed}
+          isExpanded={expandedSection === "Newsletter"}
+          toggleSection={() => toggleSection("Newsletter")}
+        />
+        <SidebarSection
+          icon={<FaUsers size={isCollapsed ? 20 : 16} />}
+          title="Employees"
+          items={[
+            { href: "/employee-table", label: "Employees Details" },
+            { href: "/employee/add", label: "Add Employees" },
+          ]}
+          isCollapsed={isCollapsed}
+          isExpanded={expandedSection === "Employees"}
+          toggleSection={() => toggleSection("Employees")}
         />
       </nav>
 
       <Tooltip id="section-tooltip" place="right" />
-    </aside>
+    </motion.aside>
   );
 };
 
@@ -158,7 +215,6 @@ interface SidebarSectionProps {
   isCollapsed: boolean;
   isExpanded: boolean;
   toggleSection: () => void;
-  closeSection: () => void;
 }
 
 const SidebarSection = ({
@@ -168,29 +224,16 @@ const SidebarSection = ({
   isCollapsed,
   isExpanded,
   toggleSection,
-  closeSection,
 }: SidebarSectionProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        isExpanded &&
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node)
-      ) {
-        closeSection();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isExpanded, closeSection]);
+  const isActiveSection = items.some((item) => location.pathname === item.href);
 
   const sectionContent = (
-    <div
+    <motion.div
+      whileHover={{ backgroundColor: isExpanded ? "" : "#e5e7eb" }}
+      whileTap={{ scale: 0.98 }}
       className={`
         py-3 px-2 
         ${
@@ -198,7 +241,8 @@ const SidebarSection = ({
             ? "flex justify-center"
             : "flex items-center justify-between"
         }
-        cursor-pointer rounded-lg hover:bg-gray-200 transition-all duration-200
+        ${isExpanded ? "bg-amber-100" : isActiveSection ? "bg-amber-50" : ""}
+        cursor-pointer rounded-lg transition-all duration-200
       `}
       onClick={(e) => {
         e.stopPropagation();
@@ -208,21 +252,38 @@ const SidebarSection = ({
       data-tooltip-content={isCollapsed ? title : ""}
     >
       <div className={`flex items-center ${isCollapsed ? "" : "space-x-3"}`}>
-        <span className={`text-gray-600 ${isCollapsed ? "" : "mr-2"}`}>
+        <motion.span
+          animate={{ rotate: isExpanded ? 5 : 0 }}
+          className={`${isCollapsed ? "" : "mr-2"} ${
+            isExpanded || isActiveSection ? "text-amber-500" : "text-gray-600"
+          }`}
+        >
           {icon}
-        </span>
+        </motion.span>
         {!isCollapsed && (
-          <h2 className="text-base font-medium text-gray-800">{title}</h2>
+          <h2
+            className={`text-base font-medium ${
+              isExpanded || isActiveSection ? "text-amber-600" : "text-gray-800"
+            }`}
+          >
+            {title}
+          </h2>
         )}
       </div>
       {!isCollapsed && (
-        <FaChevronRight
-          className={`transition-transform duration-300 ${
-            isExpanded ? "transform rotate-90" : ""
-          }`}
-        />
+        <motion.div
+          animate={{
+            rotate: isExpanded ? 90 : 0,
+          }}
+          transition={{ duration: 0.2 }}
+          className={
+            isExpanded || isActiveSection ? "text-amber-500" : "text-gray-500"
+          }
+        >
+          <FaChevronRight />
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 
   return (
@@ -234,37 +295,51 @@ const SidebarSection = ({
     >
       {sectionContent}
 
-      <div
-        className={`
-          transition-all duration-300 ease-in-out overflow-hidden
-          ${isExpanded ? "max-h-96" : "max-h-0"}
-          ${
-            isCollapsed && isExpanded
-              ? "absolute left-16 top-auto bg-white shadow-lg rounded-lg p-2 min-w-48 z-10"
-              : ""
-          }
-        `}
-      >
+      <AnimatePresence>
         {isExpanded && (
-          <ul className={`space-y-1 ${isCollapsed ? "py-2" : "pl-8 py-2"}`}>
-            {items.map((item, index) => (
-              <li key={index} className="py-1">
-                <NavLink
-                  to={item.href}
-                  className={({ isActive }) =>
-                    `text-gray-600 hover:text-blue-600 transition-colors duration-200 block px-3 py-2 rounded-md ${
-                      isActive ? "text-blue-600 font-medium bg-blue-50" : ""
-                    }`
-                  }
-                  onClick={closeSection}
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className={`
+              overflow-hidden
+              ${
+                isCollapsed
+                  ? "absolute left-16 top-auto bg-white shadow-lg rounded-lg p-2 min-w-48 z-10"
+                  : ""
+              }
+            `}
+          >
+            <ul className={`space-y-1 ${isCollapsed ? "py-2" : "pl-8 py-2"}`}>
+              {items.map((item, index) => (
+                <motion.li
+                  key={index}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="py-1"
                 >
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
+                  <NavLink
+                    to={item.href}
+                    className={({ isActive }) =>
+                      `block px-3 py-2 rounded-md transition-colors duration-200 ${
+                        isActive
+                          ? "text-blue-600 font-medium bg-blue-50"
+                          : "text-gray-600 hover:text-amber-600 hover:bg-amber-50"
+                      }`
+                    }
+                  >
+                    <motion.span whileHover={{ x: 3 }}>
+                      {item.label}
+                    </motion.span>
+                  </NavLink>
+                </motion.li>
+              ))}
+            </ul>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 };

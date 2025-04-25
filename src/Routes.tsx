@@ -34,6 +34,9 @@ import {
 } from "./pages/index";
 import TaskStatistics from "./pages/TasksStaistics";
 import ProtectedRoutes from "./utils/ProtectedRoutes";
+import EmployeeDetail from "./pages/employee/employeeDetails";
+import EmployeeTable from "./pages/employee/emplyeeTable";
+import AddEditEmployeePage from "./pages/employee/addEditEmployee";
 const routes = [
   { path: "/", component: <Welcome />, exact: true },
   { path: "/dashboard", component: <Dashboard />, exact: true },
@@ -111,6 +114,38 @@ const routes = [
       </MainLayout>
     ),
     exact: true,
+  },
+  {
+    path: "/employee-table",
+    component: (
+      <MainLayout>
+        <EmployeeTable />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/employee/:id",
+    component: (
+      <MainLayout>
+        <EmployeeDetail />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/employee/add",
+    component: (
+      <MainLayout>
+        <AddEditEmployeePage />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/employee/edit/:id",
+    component: (
+      <MainLayout>
+        <AddEditEmployeePage />
+      </MainLayout>
+    ),
   },
   {
     path: "/add-products",

@@ -1,25 +1,33 @@
-import ModuleCards from "../components/dashboard/ModuleCards";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { IQuotes } from "../types";
 import { getQuotes } from "../services/quoteService";
+import ModuleCards from "../components/dashboard/ModuleCards";
 import Quotes from "../components/dashboard/Quotes";
-import { motion } from "framer-motion";
 
 const Dashboard = () => {
   const [quotes, setQuotes] = useState<IQuotes[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchQuotes = async () => {
-      const data = await getQuotes();
-      setQuotes(data);
-      setLoading(false);
+      try {
+        setLoading(true);
+        const data = await getQuotes();
+        setQuotes(data);
+        setError(null);
+      } catch (err) {
+        setError("Failed to fetch quotes. Please try again later.");
+        console.error("Error fetching quotes:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchQuotes();
 
     const interval = setInterval(fetchQuotes, 10000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -29,6 +37,7 @@ const Dashboard = () => {
       opacity: 1,
       transition: {
         staggerChildren: 0.2,
+        when: "beforeChildren",
       },
     },
   };
@@ -44,53 +53,100 @@ const Dashboard = () => {
 
   return (
     <motion.div
-      className="min-h-screen w-full bg-gray-100 overflow-auto"
+      className="min-h-[100dvh] w-full bg-gray-100 overflow-auto flex flex-col"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
-      <div className="flex flex-col p-4 md:p-8 h-full bg-[#F7941D]">
-        <motion.h1
-          className="text-3xl md:text-4xl font-bold text-left mb-4 md:mb-6 text-white"
+      <div className="flex flex-col p-4 md:p-8 flex-grow bg-[#F7941D]">
+        <motion.div
+          className="flex items-center justify-between mb-4 md:mb-6"
           variants={itemVariants}
         >
-          Mentoons Admin
-        </motion.h1>
-
-        <div className="flex-grow grid grid-cols-1 lg:grid-rows-2 gap-4 md:gap-6 h-full">
+          <h1 className="text-3xl md:text-4xl font-bold text-white">
+            Mentoons Admin
+          </h1>
           <motion.div
-            className="rounded-xl overflow-hidden shadow-lg"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-white rounded-full p-2 shadow-md cursor-pointer"
+          >
+            <img
+              src="https://mentoons-website.s3.ap-northeast-1.amazonaws.com/logo/ec9141ccd046aff5a1ffb4fe60f79316.png"
+              alt="Mentoons Logo"
+              className="w-10 h-10 md:w-24 md:h-12"
+            />
+          </motion.div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 flex-grow">
+          <motion.div
+            className="rounded-xl overflow-hidden shadow-lg h-full"
             variants={itemVariants}
           >
-            {loading ? (
-              <div className="flex justify-center items-center bg-[#F7941D] h-full p-4 md:p-8">
-                <motion.p
-                  className="text-white text-lg"
-                  animate={{
-                    opacity: [0.5, 1, 0.5],
-                    scale: [0.98, 1, 0.98],
-                  }}
-                  transition={{
-                    duration: 2,
-                    ease: "easeInOut",
-                    repeat: Infinity,
-                  }}
+            <AnimatePresence mode="wait">
+              {loading ? (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex justify-center items-center bg-white h-full p-4 md:p-8 rounded-xl"
                 >
-                  Loading quotes...
-                </motion.p>
-              </div>
-            ) : (
-              <div className="bg-white rounded-xl shadow-lg">
-                <Quotes quotes={quotes} />
-              </div>
-            )}
+                  <motion.div
+                    className="flex flex-col items-center"
+                    animate={{
+                      opacity: [0.5, 1, 0.5],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      ease: "easeInOut",
+                      repeat: Infinity,
+                    }}
+                  >
+                    <div className="w-12 h-12 border-4 border-[#F7941D] border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="text-gray-700 font-medium">
+                      Loading quotes...
+                    </p>
+                  </motion.div>
+                </motion.div>
+              ) : error ? (
+                <motion.div
+                  key="error"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex justify-center items-center bg-white h-full p-4 md:p-8 rounded-xl"
+                >
+                  <div className="text-center">
+                    <p className="text-red-500 font-medium mb-2">{error}</p>
+                    <button
+                      onClick={() =>
+                        getQuotes()
+                          .then(setQuotes)
+                          .catch(() => setError("Failed to fetch quotes"))
+                      }
+                      className="px-4 py-2 bg-[#F7941D] text-white rounded-lg hover:bg-[#E68A1B] transition-colors"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="quotes"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="bg-white rounded-xl shadow-lg h-full"
+                >
+                  <Quotes quotes={quotes} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
-          <motion.div
-            className="overflow-auto rounded-xl"
-            variants={itemVariants}
-            style={{ maxHeight: "100%" }}
-          >
+          <motion.div className="rounded-xl h-full" variants={itemVariants}>
             <ModuleCards />
           </motion.div>
         </div>
