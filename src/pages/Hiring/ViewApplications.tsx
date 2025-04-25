@@ -90,11 +90,11 @@ const ViewApplications = () => {
             "Name",
             "Email",
             "Phone",
-            "Gender",
             "Portfolio Link",
+            "Gender",
             "Cover Note",
             "Resume Link",
-            "Cover Letter Link",
+            "Applied At",
           ]}
           data={jobs}
           sortField={sortField}
