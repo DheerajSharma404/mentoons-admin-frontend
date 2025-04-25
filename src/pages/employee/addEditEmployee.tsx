@@ -83,9 +83,11 @@ const validationSchema = Yup.object({
   salary: Yup.number()
     .positive("Salary must be greater than 0")
     .required("Salary is required"),
-  "place.city": Yup.string().required("City is required"),
-  "place.state": Yup.string().required("State is required"),
-  "place.pincode": Yup.string().required("Pincode is required"),
+  place: Yup.object({
+    city: Yup.string().required("City is required"),
+    state: Yup.string().required("State is required"),
+    pincode: Yup.string().required("Pincode is required"),
+  }),
 });
 
 const AddEditEmployeePage = () => {
@@ -103,10 +105,8 @@ const AddEditEmployeePage = () => {
     useGetEmployeeByIdQuery(employeeId!, { skip: !isEditMode });
   const employeeData = employee?.data;
 
-  const [addEmployee, { isLoading: isAddingEmployee }] =
-    useCreateEmployeeMutation();
-  const [updateEmployee, { isLoading: isUpdatingEmployee }] =
-    useUpdateEmployeeMutation();
+  const [addEmployee] = useCreateEmployeeMutation();
+  const [updateEmployee] = useUpdateEmployeeMutation();
 
   useEffect(() => {
     if (isEditMode && employeeData) {
@@ -162,7 +162,7 @@ const AddEditEmployeePage = () => {
     }
   };
 
-  const formik = useFormik({
+  const formik = useFormik<EmployeeFormData>({
     initialValues: initialFormData,
     validationSchema: validationSchema,
     onSubmit: async (values) => {
@@ -197,6 +197,34 @@ const AddEditEmployeePage = () => {
       }
     },
   });
+
+  const getFieldError = (fieldPath: string): string | undefined => {
+    const path = fieldPath.split(".");
+    let error: any = formik.errors;
+    let touched: any = formik.touched;
+
+    for (const segment of path) {
+      if (!error || typeof error !== "object") return undefined;
+      if (!touched || typeof touched !== "object") return undefined;
+
+      error = error[segment];
+      touched = touched[segment];
+    }
+
+    return touched && error ? error : undefined;
+  };
+
+  const isFieldTouched = (fieldPath: string): boolean => {
+    const path = fieldPath.split(".");
+    let touched: any = formik.touched;
+
+    for (const segment of path) {
+      if (!touched || typeof touched !== "object") return false;
+      touched = touched[segment];
+    }
+
+    return !!touched;
+  };
 
   if (isEditMode && isLoadingEmployee) {
     return (
@@ -242,13 +270,11 @@ const AddEditEmployeePage = () => {
         </div>
         <form onSubmit={formik.handleSubmit} className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Personal Information */}
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">
                 Personal Information
               </h2>
 
-              {/* Profile Picture Upload */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Profile Picture
@@ -471,7 +497,6 @@ const AddEditEmployeePage = () => {
               </div>
             </div>
 
-            {/* Address Information */}
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">
                 <MapPin size={16} className="inline mr-2" />
@@ -515,16 +540,16 @@ const AddEditEmployeePage = () => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className={`w-full p-2 border rounded-md ${
-                      formik.errors["place.city"] &&
-                      formik.touched["place.city"]
+                      getFieldError("place.city") &&
+                      isFieldTouched("place.city")
                         ? "border-red-500"
                         : "border-gray-300"
                     }`}
                   />
-                  {formik.errors["place.city"] &&
-                    formik.touched["place.city"] && (
+                  {getFieldError("place.city") &&
+                    isFieldTouched("place.city") && (
                       <p className="text-red-500 text-sm mt-1">
-                        {formik.errors["place.city"]}
+                        {getFieldError("place.city")}
                       </p>
                     )}
                 </div>
@@ -553,16 +578,16 @@ const AddEditEmployeePage = () => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className={`w-full p-2 border rounded-md ${
-                      formik.errors["place.state"] &&
-                      formik.touched["place.state"]
+                      getFieldError("place.state") &&
+                      isFieldTouched("place.state")
                         ? "border-red-500"
                         : "border-gray-300"
                     }`}
                   />
-                  {formik.errors["place.state"] &&
-                    formik.touched["place.state"] && (
+                  {getFieldError("place.state") &&
+                    isFieldTouched("place.state") && (
                       <p className="text-red-500 text-sm mt-1">
-                        {formik.errors["place.state"]}
+                        {getFieldError("place.state")}
                       </p>
                     )}
                 </div>
@@ -578,16 +603,16 @@ const AddEditEmployeePage = () => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className={`w-full p-2 border rounded-md ${
-                      formik.errors["place.pincode"] &&
-                      formik.touched["place.pincode"]
+                      getFieldError("place.pincode") &&
+                      isFieldTouched("place.pincode")
                         ? "border-red-500"
                         : "border-gray-300"
                     }`}
                   />
-                  {formik.errors["place.pincode"] &&
-                    formik.touched["place.pincode"] && (
+                  {getFieldError("place.pincode") &&
+                    isFieldTouched("place.pincode") && (
                       <p className="text-red-500 text-sm mt-1">
-                        {formik.errors["place.pincode"]}
+                        {getFieldError("place.pincode")}
                       </p>
                     )}
                 </div>
@@ -611,7 +636,6 @@ const AddEditEmployeePage = () => {
             </div>
           </div>
 
-          {/* Form Actions */}
           <div className="mt-8 pt-5 border-t border-gray-200 flex justify-end space-x-3">
             <button
               type="button"
