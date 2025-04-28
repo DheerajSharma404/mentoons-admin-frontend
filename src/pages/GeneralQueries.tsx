@@ -8,6 +8,7 @@ import {
   FaUser,
 } from "react-icons/fa";
 import { MdMessage, MdPendingActions } from "react-icons/md";
+import { errorToast, successToast } from "../utils/toastResposnse";
 
 interface Query {
   _id: string;
@@ -74,24 +75,40 @@ const GeneralQueries = () => {
     if (!selectedQuery) return;
 
     try {
-      const response = await axios.put(
-        `https://mentoons-backend-zlx3.onrender.com/api/v1/query/${selectedQuery._id}`,
+      const response = await axios.post(
+        "https://mentoons-backend-zlx3.onrender.com/api/v1/email/sendQueryResponseEmail",
         {
+          id: selectedQuery._id,
+          name: selectedQuery.name,
+          email: selectedQuery.email,
+          message: selectedQuery.message,
+          queryType: selectedQuery.queryType,
           status,
           responseMessage,
         }
       );
-      console.log(response.data);
-      // Update the queries list with the updated query
-      setQueries(
-        queries.map((q) =>
-          q._id === selectedQuery._id ? { ...q, status, responseMessage } : q
-        )
-      );
 
-      closeModal();
+      if (response.status === 200) {
+        // Update both queries and originalQueries to maintain consistency
+        const updatedQuery = { ...selectedQuery, status, responseMessage };
+        setQueries(
+          queries.map((q) => (q._id === selectedQuery._id ? updatedQuery : q))
+        );
+        setOriginalQueries(
+          originalQueries.map((q) =>
+            q._id === selectedQuery._id ? updatedQuery : q
+          )
+        );
+        closeModal();
+        successToast("Query updated successfully");
+      }
     } catch (err) {
       console.error("Failed to update query:", err);
+      errorToast(
+        `Failed to update query: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
     }
   };
 
@@ -231,7 +248,8 @@ const GeneralQueries = () => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-gray-800">
-                  {selectedQuery.queryType || "No Subject"}
+                  {selectedQuery.queryType.charAt(0).toUpperCase() +
+                    selectedQuery.queryType.slice(1) || "No Subject"}
                 </h2>
                 <button
                   onClick={closeModal}
